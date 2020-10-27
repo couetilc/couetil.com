@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <!-- <meta http-equiv="refresh" content="3" > -->
+    <title>couetil.com</title>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <header>
+      <h1 id="yo">
+        <div>Yo.</div>
+      </h1>
+    </header>
+    <nav>
+      <a href="/about">About</a>
+      <a href="/misc">Misc.</a>
+    </nav>
+    <main>
+      <form
+        id="login"
+        action="http://localhost:3000/auth/login"
+        method="post"
+        target="_blank"
+      >
+        <input name="uid" type="text" placeholder="uid"/>
+        <input name="pwd" type="password" placeholder="pwd"/>
+        <input value="Log In" type="submit" />
+      </form>
+      <form
+        id="signup"
+        action="http://localhost:3000/auth/signup"
+        method="post"
+        target="_blank"
+      >
+        <input name="uid" type="text" placeholder="uid"/>
+        <input name="pwd" type="password" placeholder="pwd"/>
+        <input value="Sign Up" type="submit" />
+      </form>
+    </main>
+    <footer>
+      <a>Home</a>
+      <a>Github</a>
+      <a>LinkedIn</a>
+    </footer>
+  </body>
+</html>

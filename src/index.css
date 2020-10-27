@@ -1,0 +1,70 @@
+body {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  min-height: 100vh;
+  /* color */
+  background-color: red;
+  /* typography */
+  font-size: 16px;
+  font-family: sans-serif;
+  /* Libre Baskerville, Lobster, Dancing Script, Pacifico, Fredoka One, Bree
+   * Serif, Patua One, Righteous?, Alfa Slab One!, Lobster Two */
+}
+
+#yo {
+  display: flex;
+  width: 100%:
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0;
+  /* typography */
+  font-size: 10em;
+}
+
+#yo div {
+  width: fit-content;
+}
+
+form#login {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  padding: 1rem;
+}
+
+form#login input {
+  font-size: 1rem;
+  padding: .25rem;
+  margin: .5rem;
+}
+
+form#signup {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  padding: 1rem;
+}
+
+form#signup input {
+  font-size: 1rem;
+  padding: .25rem;
+  margin: .5rem;
+}
+
+nav {
+  border-top: .5em solid black;
+  padding-top: .5em;
+  font-size: 1.25em;
+}
+
+main {
+  height: 200px;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+}
