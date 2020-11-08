@@ -76,6 +76,7 @@ import { CHAR_QUESTION_MARK } from "https://deno.land/std@0.73.0/path/_constants
  *  - cap password length at a reasonable limit.
  *  - SCIM
  *  - when DELETE /users/:id, first inactivate, then delete all data after a time period like 3months (see if GDPR has guidelines).
+ *  - create an SDK to be used on the client side for making calls against the API
  *  SOME RESOURCES
  *  - nice reference https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
  *  - tips for rolling auth https://news.ycombinator.com/item?id=18767767
@@ -371,6 +372,12 @@ function get_user_router(db: AuthDatabase): Router {
                 // TODO only add error object to response if debug/logging level is development
             }
         })
+        // NOTE I don't like having :id in the route. It's like a special filter
+        // argument, when it could be rolled into the query parameters as a
+        // proper filter argument. If you have :id in the URL, it should be used
+        // like a shorthand for getting a user associated resource e.g.
+        // /users/:id/permissions gets all permissions for the specified user
+        // (that's like a forwarded, or hierarchical filter)
         .get('/users/:id', async (ctx: RouterContext) => {
             /* validation */
 

@@ -1,42 +1,57 @@
+function SDK() {
+    const base_url = 'http://localhost:3000'
+    return {
+        login: async (uid, pwd) => {
+            const response = await fetch(`${base_url}/auth/password`, {
+                method: 'POST',
+                body: JSON.stringify({ uid, pwd })
+            })
+            const login = await response.json()
+            if (login.error) {
+                throw new Error(login.error)
+            }
+            return login;
+        },
+        signup: async (uid, pwd) => {
+            const response = await fetch(`${base_url}/auth/signup`, {
+                method: 'POST',
+                body: JSON.stringify({ uid, pwd })
+            })
+            const signup = await response.json();
+            if (signup.error) {
+                throw new Error(signup.error)
+            }
+            return signup;
+        }
+    }
+}
+
+const auth = SDK();
+
 window.addEventListener('load', () => {
     document.querySelector('#login').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // login
         const uid = e.target.elements.uid.value;
         const pwd = e.target.elements.pwd.value;
-        const response = await fetch('http://localhost:3000/auth/password', {
-            method: 'POST',
-            body: JSON.stringify({ uid, pwd })
-        })
-        const login = await response.json()
-        console.log({ login })
-        // error
-        if (login.error) {
-            alert(login.error)
-        }
-        else {
-            // success
+        try {
+            const login = await auth.login(uid, pwd)
+            console.log({ login })
             document.querySelector("#username").innerText = login.uid;
+        } catch (error) {
+            alert(error)
         }
     })
     document.querySelector('#signup').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // login
         const uid = e.target.elements.uid.value;
         const pwd = e.target.elements.pwd.value;
-        const response = await fetch('http://localhost:3000/auth/signup', {
-            method: 'POST',
-            body: JSON.stringify({ uid, pwd })
-        })
-        const signup = await response.json();
-        console.log({ signup })
-        // error
-        if (signup.error) {
-            alert(signup.error)
-        }
-        else {
-            // success
+        try {
+            const signup = await auth.signup(uid, pwd);
+            console.log({ signup })
             document.querySelector("#signup-message").innerText = "Hello " + signup.uid + "!";
+        }
+        catch (error) {
+            alert(error)
         }
     })
 })
