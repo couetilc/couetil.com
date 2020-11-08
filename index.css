@@ -12,20 +12,24 @@ body {
    * Serif, Patua One, Righteous?, Alfa Slab One!, Lobster Two */
 }
 
-#yo {
+#greeting {
   display: flex;
-  width: 100%:
-  align-items: center;
+  width: 100%;
+  align-items: baseline;
   justify-content: center;
   text-align: center;
   margin-top: 0;
   margin-bottom: 0;
   /* typography */
-  font-size: 10em;
+  font-size: 10rem;
 }
 
-#yo div {
+#yo {
   width: fit-content;
+}
+
+#username {
+  font-size: 6rem;
 }
 
 form#login {
@@ -55,9 +59,9 @@ form#signup input {
 }
 
 nav {
-  border-top: .5em solid black;
-  padding-top: .5em;
-  font-size: 1.25em;
+  border-top: .5rem solid black;
+  padding-top: .5rem;
+  font-size: 1.25rem;
 }
 
 main {

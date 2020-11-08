@@ -3,11 +3,14 @@
     <!-- <meta http-equiv="refresh" content="3" > -->
     <title>couetil.com</title>
     <link rel="stylesheet" href="./index.css" />
+    <script src="./index.js"></script>
   </head>
   <body>
     <header>
-      <h1 id="yo">
-        <div>Yo.</div>
+      <h1 id="greeting">
+        <div id="yo">Yo</div>
+        <div id="username"></div>
+        <div id="dot">.</div>
       </h1>
     </header>
     <nav>
@@ -17,7 +20,7 @@
     <main>
       <form
         id="login"
-        action="http://localhost:3000/auth/login"
+        action="http://localhost:3000/auth/password"
         method="post"
         target="_blank"
       >
@@ -34,6 +37,7 @@
         <input name="uid" type="text" placeholder="uid"/>
         <input name="pwd" type="password" placeholder="pwd"/>
         <input value="Sign Up" type="submit" />
+        <div id="signup-message"></div>
       </form>
     </main>
     <footer>

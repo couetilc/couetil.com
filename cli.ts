@@ -278,6 +278,10 @@ function get_auth_router(db: AuthDatabase): Router {
             // required parameters
             ctx.assert(uid && pwd, Status.BadRequest, 'request body requires username and password')
 
+            /* CORS */
+
+            ctx.response.headers.set('Access-Control-Allow-Origin', '*')
+
             /* functionality */
 
             try {
@@ -308,6 +312,10 @@ function get_auth_router(db: AuthDatabase): Router {
             // required parameters
             ctx.assert(uid && pwd, Status.BadRequest, 'request body requires username and password')
 
+            /* CORS */
+
+            ctx.response.headers.set('Access-Control-Allow-Origin', '*')
+
             /* functionality */
 
             try {
@@ -315,7 +323,8 @@ function get_auth_router(db: AuthDatabase): Router {
                 ctx.response.body = user;
                 ctx.response.status = Status.OK
             } catch (error) {
-                ctx.response.body = { error: 'login failed' }
+                console.log(error)
+                ctx.response.body = { error }
                 ctx.response.status = Status.InternalServerError
             }
     })
