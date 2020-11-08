@@ -97,22 +97,6 @@ import { CHAR_QUESTION_MARK } from "https://deno.land/std@0.73.0/path/_constants
   */
 
 /**
- * Get a cryptographically secure random salt as a hexadecimal string. Salts
- * should be about the same number of bytes as the final hash. 64-bit salts
- * should have a no collision for about a billion tries (TODO the math here)
- * @returns nbyte hexadecimal string (two char per byte)
- */
-export function getSalt(nbytes: number): string {
-    if (nbytes < 0) throw new Error('number of bytes can\'t be negative');
-    let salt = '';
-    const salty = crypto.getRandomValues(new Uint8Array(nbytes));
-    for (const rand of salty) {
-      salt += rand.toString(16).padStart(2, '0');
-    }
-    return salt;
-}
-
-/**
  * Return a string formatted timestamp for a date, defaultting to current
  * TODO have it return a pretty formatted UTC string instead of epoch time
  */
@@ -134,7 +118,7 @@ interface AuthError {
 interface UserModel {
     insert: (cred: Credential) => Promise<User>,
     selectAll: () => UserCollection,
-    select: (id: number) => User,
+    select: (col: string, val: any) => User,
     update: (id: number, user: NewUser) => Promise<User>,
     delete: (id: number) => void,
 }
@@ -167,7 +151,7 @@ function auth_database(name: string): AuthDatabase {
     client.query(`create table if not exists users (
       id integer primary key autoincrement,
       uid text not null unique,
-      salt text not null,
+      salt blob not null,
       pass text not null,
       created text default current_timestamp,
       edited text default current_timestamp
@@ -182,8 +166,9 @@ function user_model(db: AuthDatabase): UserModel {
     // is then passed to the function.
     const model: UserModel = {
         insert: async ({ uid, pwd }) => {
-            const salt = getSalt(64); // 64 because the hashed password is 64 bytes (hexadecimal string length 128)
-            const pass = await hash(salt + pwd);
+            // 32 because scrypt encrypted data format expects 32 byte salt
+            const salt = crypto.getRandomValues(new Uint8Array(32));
+            const pass = await hash(pwd, { salt });
             // TODO error handling by catching sql errors and translating it to custom errors?
             db.client.query(
                 "insert into users (uid, salt, pass) values (:uid, :salt, :pass)",
@@ -216,8 +201,8 @@ function user_model(db: AuthDatabase): UserModel {
                 count: users.length,
             };
         },
-        select: (id) => {
-            const rows = db.client.query(`select * from users where id = :id`, { id });
+        select: (col, val) => {
+            const rows = db.client.query(`select * from users where ${col} = :val`, { val });
             const user = [ ...rows.asObjects() ][0];
             // TODO get rid of this throws, instead should return an error object/interface
             if (!user) {
@@ -232,7 +217,7 @@ function user_model(db: AuthDatabase): UserModel {
             };
         },
         update: async (id, user) => {
-            const current_user: User = model.select(id)
+            const current_user: User = model.select('id', id)
             // TODO get rid of this throws, instead should return an error object/interface
             if (!current_user) {
                 // e.g. would return { error: 'no user', status: Status.NotFound }}
@@ -241,26 +226,111 @@ function user_model(db: AuthDatabase): UserModel {
             // TODO what happens if update password?
             const updated_user = { ...current_user, ...user }
             db.client.query(`update users set uid = :uid where id = :id`, { id, uid: updated_user.uid })
-            return model.select(id)
+            return model.select('id', id)
         },
         delete: async (id) => {
             db.client.query(`delete from users where id = :id`, { id });
         }
     }
 
-    return model;
+    return model
 }
 
-function auth_router(db: AuthDatabase): Router {
+interface AuthModel {
+    password: (uid: string, pwd: string) => Promise<User>,
+}
+
+function auth_model(db: AuthDatabase): AuthModel {
+    const model = {
+        password: async (uid: string, pwd: string) => {
+            const user = [ ...db.client.query('select * from users where uid = ?', [uid]).asObjects()][0]
+            const req_pass = await hash(pwd, { salt: user.salt })
+            if (req_pass !== user.pass) {
+                throw new Error('invalid password')
+            }
+            return {
+                id: user.id,
+                uid: user.uid,
+                created: user.created,
+                edited: user.edited,
+            }
+        },
+    }
+    return model
+}
+
+function get_auth_router(db: AuthDatabase): Router {
+    return new Router()
+    // this will assume a password/login authentication scheme for now, but will
+    // be able to specify SAML, or MFA, or OTP method in future.
+    .post('/auth/password', async (ctx: RouterContext) => {
+            /* validation */
+
+            // parse body
+            ctx.assert(ctx.request.hasBody, Status.BadRequest, 'missing request body')
+            // required body format
+            let uid, pwd;
+            try {
+                ({ uid, pwd } = await ctx.request.body({ type: 'json' }).value);
+            } catch (error) {
+                ctx.assert(false, Status.BadRequest, 'request body must be JSON');
+            }
+            // required parameters
+            ctx.assert(uid && pwd, Status.BadRequest, 'request body requires username and password')
+
+            /* functionality */
+
+            try {
+                const user = await auth_model(db).password(uid, pwd)
+                ctx.response.body = user;
+                ctx.response.status = Status.OK
+            } catch (error) {
+                ctx.response.body = { error: 'login failed' }
+                ctx.response.status = Status.InternalServerError
+            }
+
+    })
+    // this is essentially equivalent to POST /users right now, but will be more
+    // complicatd in the future as it arranges the credentials and permissions for
+    // a user.
+    .post('/auth/signup', async (ctx: RouterContext) => {
+            /* validation */
+
+            // parse body
+            ctx.assert(ctx.request.hasBody, Status.BadRequest, 'missing request body')
+            // required body format
+            let uid, pwd;
+            try {
+                ({ uid, pwd } = await ctx.request.body({ type: 'json' }).value);
+            } catch (error) {
+                ctx.assert(false, Status.BadRequest, 'request body must be JSON');
+            }
+            // required parameters
+            ctx.assert(uid && pwd, Status.BadRequest, 'request body requires username and password')
+
+            /* functionality */
+
+            try {
+                const user = await user_model(db).insert({ uid, pwd })
+                ctx.response.body = user;
+                ctx.response.status = Status.OK
+            } catch (error) {
+                ctx.response.body = { error: 'login failed' }
+                ctx.response.status = Status.InternalServerError
+            }
+    })
+}
+
+function get_user_router(db: AuthDatabase): Router {
     return new Router()
         .get('/ping', (ctx) => {
-            ctx.response.body = 'pong';
+            ctx.response.body = 'pong'
         })
         .get('/args', (ctx) => {
             ctx.response.body = { ...args }
         })
         .get('/users', (ctx) => {
-            ctx.response.body = user_model(db).selectAll();
+            ctx.response.body = user_model(db).selectAll()
         })
         .post('/users', async (ctx: RouterContext) => {
             /* validation */
@@ -302,9 +372,10 @@ function auth_router(db: AuthDatabase): Router {
             /* functionality */
 
             try {
-                const user = user_model(db).select(user_id);
+                const user = user_model(db).select('id', user_id);
                 ctx.response.body = user;
             } catch (error) {
+                console.log({ error })
                 ctx.response.status = Status.NotFound;
             }
         })
@@ -389,17 +460,20 @@ function auth_router(db: AuthDatabase): Router {
 }
 
 function auth_application(db: AuthDatabase) {
-    const router = auth_router(db);
+    const user_router = get_user_router(db);
+    const auth_router = get_auth_router(db);
     const oak = new Application();
-    oak.use(router.routes());
-    oak.use(router.allowedMethods());
+    oak.use(user_router.routes());
+    oak.use(user_router.allowedMethods());
+    oak.use(auth_router.routes());
+    oak.use(auth_router.allowedMethods());
     oak.addEventListener('listen', (e) => {
       console.log('event %o at %o', e.type, `${e.secure ? 'https' : 'http'}://${e.hostname || 'localhost'}:${e.port}`);
     })
     return oak;
 }
 
-async function server (db_name = 'auth.db', port = 3000) {
+async function server (db_name = 'db/auth.db', port = 3000) {
     const db = auth_database(db_name);
     const oak = auth_application(db);
     await oak.listen({ port })

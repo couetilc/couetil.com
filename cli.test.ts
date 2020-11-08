@@ -1,20 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.76.0/testing/asserts.ts";
 
-
 Deno.test(makeTest({
-    name: 'cli',
-    ignore: true,
-    args: { port: 3001, db: ":memory:" },
-    fn: async () => {
-        // test if returns the cli arguments the server was started with
-        const res = await fetch('http://localhost:3001/args');
-        assertEquals(await res.json(), { _: [], port: 3001, db: ':memory:' });
-    },
-}));
-
-Deno.test(makeTest({
-    name: 'subprocess',
-    ignore: true,
+    name: 'server',
     args: { port: 3000, db: ":memory:" },
     fn: async () => {
         // test if responds to ping with a pong
@@ -22,6 +9,39 @@ Deno.test(makeTest({
         assertEquals(await res.text(), "pong");
     },
 }));
+
+Deno.test(makeTest({
+    name: 'auth',
+    args: { port: 3000, db: ':memory:'},
+    fn: async () => {
+        const base_url = 'http://localhost:3000';
+        let response;
+        // create a user
+        response = await fetch(`${base_url}/auth/signup`, {
+            method: 'POST',
+            body: JSON.stringify({ uid: 'paul', pwd: 'duval' })
+        })
+        assertEquals(response.status, 200)
+        const created_user = await response.json()
+        // successful password for user
+        response = await fetch(`${base_url}/auth/password`, {
+            method: 'POST',
+            body: JSON.stringify({ uid: 'paul', pwd: 'duval' })
+        })
+        const login_user = await response.json();
+        console.log({ created_user, login_user })
+        assertEquals(response.status, 200)
+        assertEquals(created_user, login_user)
+        // bad password as user
+        response = await fetch(`${base_url}/auth/password`, {
+            method: 'POST',
+            body: JSON.stringify({ uid: 'paul', pwd: 'couetil' })
+        })
+        const bad_login = await response.json();
+        assertEquals(response.status, 500)
+        assertEquals(bad_login, { error: 'login failed' })
+    }
+}))
 
 Deno.test(makeTest({
     name: 'users',
@@ -149,7 +169,6 @@ Deno.test(makeTest({
         assertEquals(user.id, 1)
         assertEquals(typeof user.created, 'string')
         assertEquals(typeof user.edited, 'string')
-
 
         // TODO test for DELETE-ing a user
         response = await fetch('http://localhost:3001/users/1', {
