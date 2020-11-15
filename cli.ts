@@ -1,11 +1,12 @@
 import { DB } from "https://deno.land/x/sqlite@v2.3.1/mod.ts"
 import { parse } from "https://deno.land/std@0.76.0/flags/mod.ts"
-import { Application, RouterContext, Router } from "https://deno.land/x/oak@v6.3.1/mod.ts"
+import { Application, RouterContext, Router, BodyType, Context, RouterMiddleware, Route, ErrorStatus } from "https://deno.land/x/oak@v6.3.1/mod.ts"
 import { hash, verify, genSalt } from "https://deno.land/x/scrypt@v2.0.0/mod.ts"
 import { Status } from "https://deno.land/std@0.76.0/http/mod.ts"
 import { debug } from "https://deno.land/std@0.76.0/log/mod.ts"
 import { DateTimeFormatter } from "https://deno.land/std@0.76.0/datetime/formatter.ts"
 import { CHAR_QUESTION_MARK } from "https://deno.land/std@0.73.0/path/_constants.ts"
+import { Types } from "https://deno.land/x/sqlite@v2.3.1/src/constants.ts"
 
 /**
  * REST API
@@ -77,6 +78,7 @@ import { CHAR_QUESTION_MARK } from "https://deno.land/std@0.73.0/path/_constants
  *  - SCIM
  *  - when DELETE /users/:id, first inactivate, then delete all data after a time period like 3months (see if GDPR has guidelines).
  *  - create an SDK to be used on the client side for making calls against the API
+ *  - validator oak middleware like https://express-validator.github.io/docs/
  *  SOME RESOURCES
  *  - nice reference https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
  *  - tips for rolling auth https://news.ycombinator.com/item?id=18767767
@@ -328,6 +330,10 @@ function get_auth_router(db: AuthDatabase): Router {
                 ctx.response.body = { error }
                 ctx.response.status = Status.InternalServerError
             }
+    })
+
+    .post('/auth/basic', (ctx) => {
+        ctx.response.status = Status.Unauthorized;
     })
 }
 

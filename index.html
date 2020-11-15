@@ -3,6 +3,7 @@
     <!-- <meta http-equiv="refresh" content="3" > -->
     <title>couetil.com</title>
     <link rel="stylesheet" href="./index.css" />
+    <script src="https://unpkg.com/mitt/dist/mitt.umd.js"></script>
     <script src="./index.js"></script>
   </head>
   <body>
@@ -16,29 +17,37 @@
     <nav>
       <a href="/about">About</a>
       <a href="/misc">Misc.</a>
+      <button id="btn-login">Login</button>
     </nav>
     <main>
-      <form
-        id="login"
-        action="http://localhost:3000/auth/password"
-        method="post"
-        target="_blank"
-      >
-        <input name="uid" type="text" placeholder="uid"/>
-        <input name="pwd" type="password" placeholder="pwd"/>
-        <input value="Log In" type="submit" />
-      </form>
-      <form
-        id="signup"
-        action="http://localhost:3000/auth/signup"
-        method="post"
-        target="_blank"
-      >
-        <input name="uid" type="text" placeholder="uid"/>
-        <input name="pwd" type="password" placeholder="pwd"/>
-        <input value="Sign Up" type="submit" />
-        <div id="signup-message"></div>
-      </form>
+      <div>This is my website. It's for me, not for you.</div>
+      <div id="popup">
+        <button id="popup-close" type="button">X</button>
+        <form
+          id="login"
+          action="http://localhost:3000/auth/password"
+          method="post"
+          target="_blank"
+        >
+          <input name="uid" type="text" placeholder="uid"/>
+          <input name="pwd" type="password" placeholder="pwd"/>
+          <input value="Log In" type="submit" />
+        </form>
+        <details>
+          <summary>Need to Signup?</summary>
+          <form
+            id="signup"
+            action="http://localhost:3000/auth/signup"
+            method="post"
+            target="_blank"
+          >
+            <input name="uid" type="text" placeholder="uid"/>
+            <input name="pwd" type="password" placeholder="pwd"/>
+            <input value="Sign Up" type="submit" />
+            <div id="signup-message"></div>
+          </form>
+        </details>
+      </div>
     </main>
     <footer>
       <a>Home</a>

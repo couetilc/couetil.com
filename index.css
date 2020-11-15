@@ -60,8 +60,12 @@ form#signup input {
 
 nav {
   border-top: .5rem solid black;
-  padding-top: .5rem;
+  padding: .5rem;
   font-size: 1.25rem;
+}
+
+nav a {
+  margin: .5rem;
 }
 
 main {
@@ -71,4 +75,28 @@ main {
 footer {
   position: absolute;
   bottom: 0;
+}
+
+#popup {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+
+  background-color: rgba(255, 247, 0, 0.75);
+  display: none;
+}
+
+#popup-close {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  margin: 1rem;
 }
