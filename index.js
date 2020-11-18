@@ -10,6 +10,7 @@ function SDK() {
             if (login.error) {
                 throw new Error(login.error)
             }
+            document.cookie = `token=${login.uid};`
             return login;
         },
         signup: async (uid, pwd) => {
@@ -22,6 +23,9 @@ function SDK() {
                 throw new Error(signup.error)
             }
             return signup;
+        },
+        logout: () => {
+            document.cookie = `token=;`;
         }
     }
 }
@@ -56,7 +60,7 @@ function initLoginForm() {
         try {
             const login = await auth.login(uid, pwd)
             console.log({ login })
-            document.querySelector("#username").innerText = login.uid;
+            username().set(login.uid)
             popup().hide();
         } catch (error) {
             alert(error)
@@ -82,7 +86,14 @@ function initSignupForm() {
 
 function initLoginButton() {
     document.querySelector('#btn-login').addEventListener('click', (e) => {
-        popup().show();
+        popup().show()
+    })
+}
+
+function initLogoutButton() {
+    document.querySelector('#btn-logout').addEventListener('click', (e) => {
+        username.set('')
+        auth.logout()
     })
 }
 
@@ -92,24 +103,33 @@ function popup() {
     const methods = {
         init: () => {
             document.querySelector('#popup-close').addEventListener('click', () => {
-                methods.hide();
+                methods.hide()
             })
         },
         show: () => {
-            get().style.display = 'flex';
+            get().style.display = 'flex'
         },
         hide: () => {
-            get().style.display = 'none';
+            get().style.display = 'none'
         }
     }
 
     return methods
 }
 
+function username() {
+    const get = () => document.querySelector('#username')
+    username.set = (val) => {
+        document.querySelector("#username").innerText = val;
+    }
+    return username;
+}
+
 function App() {
     mitt.on('load', initLoginForm)
     mitt.on('load', initSignupForm)
     mitt.on('load', initLoginButton)
+    mitt.on('load', initLogoutButton)
     mitt.on('load', popup().init)
 
     return {
