@@ -52,84 +52,98 @@ function m () {
 const mitt = m();
 const auth = SDK();
 
-function initLoginForm() {
-    document.querySelector('#login').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const uid = e.target.elements.uid.value;
-        const pwd = e.target.elements.pwd.value;
-        try {
-            const login = await auth.login(uid, pwd)
-            console.log({ login })
-            username().set(login.uid)
-            popup().hide();
-        } catch (error) {
-            alert(error)
-        }
-    })
+function login_form() {
+    const get = () => document.querySelector('#login')
+    login_form.init = () => {
+        get().addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uid = e.target.elements.uid.value;
+            const pwd = e.target.elements.pwd.value;
+            try {
+                const login = await auth.login(uid, pwd)
+                console.log({ login })
+                username().set(login.uid)
+                popup().hide();
+            } catch (error) {
+                alert(error)
+            }
+        })
+    }
+    return login_form;
 }
 
-function initSignupForm() {
-    document.querySelector('#signup').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const uid = e.target.elements.uid.value;
-        const pwd = e.target.elements.pwd.value;
-        try {
-            const signup = await auth.signup(uid, pwd);
-            console.log({ signup })
-            document.querySelector("#signup-message").innerText = "Hello " + signup.uid + "!";
-        }
-        catch (error) {
-            alert(error)
-        }
-    })
+function signup_form() {
+    const get = () => document.querySelector('#signup')
+    signup_form.init = () => {
+        get().addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uid = e.target.elements.uid.value;
+            const pwd = e.target.elements.pwd.value;
+            try {
+                const signup = await auth.signup(uid, pwd);
+                console.log({ signup })
+                document.querySelector("#signup-message").innerText = "Hello " + signup.uid + "!";
+            }
+            catch (error) {
+                alert(error)
+            }
+        })
+    }
+    return signup_form
 }
 
-function initLoginButton() {
-    document.querySelector('#btn-login').addEventListener('click', (e) => {
-        popup().show()
-    })
+function login_button() {
+    const get = () => document.querySelector('#btn-login')
+    login_button.init = () => {
+        get().addEventListener('click', (e) => {
+            popup().show()
+        })
+    }
+    return login_button
 }
 
-function initLogoutButton() {
-    document.querySelector('#btn-logout').addEventListener('click', (e) => {
-        username.set('')
-        auth.logout()
-    })
+function logout_button() {
+    const get = () => document.querySelector('#btn-logout')
+    logout_button.init = () => {
+        get().addEventListener('click', (e) => {
+            username().set('')
+            auth.logout()
+        })
+    }
+    return logout_button
 }
 
 function popup() {
     const get = () => document.querySelector('#popup')
 
-    const methods = {
-        init: () => {
-            document.querySelector('#popup-close').addEventListener('click', () => {
-                methods.hide()
-            })
-        },
-        show: () => {
-            get().style.display = 'flex'
-        },
-        hide: () => {
-            get().style.display = 'none'
-        }
+    popup.init = () => {
+        document.querySelector('#popup-close').addEventListener('click', () => {
+            methods.hide()
+        })
+    },
+    popup.show = () => {
+        get().style.display = 'flex'
+    },
+    popup.hide = () => {
+        get().style.display = 'none'
     }
 
-    return methods
+    return popup
 }
 
 function username() {
     const get = () => document.querySelector('#username')
     username.set = (val) => {
-        document.querySelector("#username").innerText = val;
+        document.querySelector("#username").innerText = val
     }
-    return username;
+    return username
 }
 
 function App() {
-    mitt.on('load', initLoginForm)
-    mitt.on('load', initSignupForm)
-    mitt.on('load', initLoginButton)
-    mitt.on('load', initLogoutButton)
+    mitt.on('load', login_form().init)
+    mitt.on('load', signup_form().init)
+    mitt.on('load', login_button().init)
+    mitt.on('load', logout_button().init)
     mitt.on('load', popup().init)
 
     return {
@@ -140,4 +154,4 @@ function App() {
 }
 
 const app = App()
-app.init();
+app.init()
