@@ -133,10 +133,28 @@ function popup() {
 
 function username() {
     const get = () => document.querySelector('#username')
+
+    username.init = () => {
+        const { token } = parseCookie()
+        console.log({ token, ck: parseCookie() })
+        if (token) {
+            username.set(token)
+        }
+    }
     username.set = (val) => {
         document.querySelector("#username").innerText = val
     }
+
     return username
+}
+
+function parseCookie(cookie = document.cookie) {
+    return cookie.split(';').reduce((cks, ck) => {
+        const [key, val] = ck.split('=')
+        console.log({ key, val })
+        cks[key] = val
+        return cks
+    }, {})
 }
 
 function App() {
@@ -145,6 +163,7 @@ function App() {
     mitt.on('load', login_button().init)
     mitt.on('load', logout_button().init)
     mitt.on('load', popup().init)
+    mitt.on('load', username().init)
 
     return {
         init: (e) => {
