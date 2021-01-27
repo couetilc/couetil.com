@@ -262,6 +262,25 @@ function auth_model(db: AuthDatabase): AuthModel {
     return model
 }
 
+function session_model(db: AuthDatabase) {
+}
+
+function get_session_router(db: AuthDatabase): Router {
+    return new Router()
+    .get('/sessions', async (ctx: RouterContext) => {
+        // get all sessions
+    })
+    .post('/sessions', async (ctx: RouterContext) => {
+        // create a new session
+    })
+    .get('/sessions/:id', async (ctx: RouterContext) => {
+        // get session object
+    })
+    .delete('/sessions/:id', async (ctx: RouterContext) => {
+        // delete a session
+    })
+}
+
 function get_auth_router(db: AuthDatabase): Router {
     return new Router()
     // this will assume a password/login authentication scheme for now, but will
