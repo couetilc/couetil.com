@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <meta name="description" content="Welcome to Connor Couetil's home page">
     <meta name="keywords" content="couetil, connor, software engineering, web development,full-stack developer, cloud software consulting, javascript">
-    <title>🌴Yo.</title>
+    <title>Yo.</title>
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Bungee:wght@400&family=Rubik:wght@400&display=block" rel="stylesheet">
 
@@ -13,14 +13,10 @@
   <body>
     <!--
       TODO
-      - responsive layout:
-        - background image acts weird when page height > width
-        - at each break point?
-          - large break point: stays the same
-          - medium break point: just shrink the whole thing a bit
-          - small break point: flip the scribble 90deg and set nav { flex-flow: column }
-      - test how it looks and behaves when javascript is disabled
       - build with webpack
+      - add links to github and resume, etc.
+      - DEPLOY THIS SUCKER
+      - favicon? could be a really small version of my scribble...(then remove the palm tree from the <title>
       - CLI for building this webpage? to import into couetil.com? could host this under "www" repo?
       - self host plausible from raspberry pi using my domain? https://plausible.io/docs/self-hosting
       - could also host plausible using sandstorm? https://sandstorm.io/install (install this anyway on PI and check out the apps)
@@ -44,11 +40,20 @@
                         viz/R20m/output80_nosharp.jpg">
         <source media="(min-width: 900px) and (max-width: 2049px)"
                 srcset="viz/R60m/output80_nosharp.webp,
-                        viz/R60m/output80_nosharp.jpg">
+                        viz/R60m/output80_nosharp.jpg,
+                        viz/R20m/output80_nosharp.webp 2x,
+                        viz/R20m/output80_nosharp.jpg 2x
+                        ">
         <source media="(min-width: 500px) and (max-width: 899px)"
                 srcset="viz/R60m/output80_nosharp_1200.webp,
-                        viz/R60m/output80_nosharp_1200.jpg">
-        <source srcset="viz/R60m/output80_nosharp_700.webp">
+                        viz/R60m/output80_nosharp_1200.jpg,
+                        viz/R60m/output80_nosharp.webp 2x,
+                        viz/R60m/output80_nosharp.jpg 2x,
+                        ">
+        <source srcset="viz/R60m/output80_nosharp_700.webp,
+                        viz/R60m/output80_nosharp.webp 2x,
+                        viz/R60m/output80_nosharp.jpg 2x,
+                        ">
         <img src="viz/R60m/output80_nosharp_700.jpg" alt="background satellite image">
       </picture>
       <div id="cloud">
@@ -101,8 +106,7 @@
         padding: 0;
       }
       html {
-        background: linear-gradient(45deg, #0072ff, blue 75%, #6e00ff);
-        background-color: #0072ff;
+        background-color: black;
         font-size: 18px;
       }
       #content {
@@ -118,11 +122,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        left: -25%;
-        top: -5%;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
       }
       #background * {
         transition:  transform 1.5s ease;
+      }
+      #background img {
+        min-height: 100%;
       }
       #cloud {
         display: flex;
@@ -142,13 +151,13 @@
       header {
         z-index: 1;
         position: absolute;
-        white-space: nowrap;
         display: flex;
         flex-flow: column nowrap;
         align-items: center;
+        text-align: center;
       }
       header h1 {
-        font-size: 3.75rem;
+        font-size: 3.70rem;
         font-family: 'Bungee', monospace;
         margin: 0;
       }
@@ -191,6 +200,41 @@
         }
         .nav-item {
           margin: .5rem;
+        }
+      }
+      @media screen and (max-width: 550px) {
+        /* move cloud to top of screen, add links below with a white text-shadow */
+        #scribble {
+          display: none;
+        }
+        header h1 {
+          font-size: 2.25rem;
+          text-shadow:
+            2px 2px 8px white,
+            -2px -2px 8px white;
+        }
+        nav {
+          margin-top: 1rem;
+          border-top: none;
+          flex-flow: column nowrap;
+          align-items: center;
+          justify-content: center;
+        }
+        nav a {
+          font-size: 1.5rem;
+          color: white;
+          text-shadow:
+            4px 4px 16px black,
+            -4px -4px 16px black,
+            -4px 4px 16px black,
+            4px -4px 16px black
+            ;
+        }
+        .underline {
+          border-bottom: 1px solid black;
+        }
+        .nav-item:hover .underline {
+          border-bottom: 1px solid white;
         }
       }
     </style>
