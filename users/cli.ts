@@ -447,8 +447,6 @@ function get_user_router(db: AuthDatabase): Router {
                 const updated_user = await user_model(db).update(user_id, { uid });
                 ctx.response.body = updated_user
             } catch (error) {
-                // TODO if no user, then 404
-                // otherwise, 500
                 ctx.response.status = Status.InternalServerError
             }
         })
@@ -473,8 +471,6 @@ function get_user_router(db: AuthDatabase): Router {
                 const updated_user = await user_model(db).update(user_id, { uid });
                 ctx.response.body = updated_user
             } catch (error) {
-                // TODO if no user, then 404
-                // otherwise, 500
                 ctx.response.status = Status.InternalServerError
             }
         })
@@ -493,8 +489,6 @@ function get_user_router(db: AuthDatabase): Router {
                 ctx.response.status = Status.OK
             } catch (error) {
                 console.log({ error })
-                // TODO if no user, then 404
-                // otherwise, 500
                 ctx.response.status = Status.InternalServerError
             }
         })
