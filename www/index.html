@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <meta name="description" content="Welcome to Connor Couetil's home page">
+    <meta name="keywords" content="couetil, connor, software engineering, web development,full-stack developer, cloud software consulting, javascript">
+    <title>Yo.</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee:wght@400&family=Rubik:wght@400&display=block" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/index.css" />
+
+  </head>
+  <body>
+    <!--
+      TODO
+      - add links to github and resume, etc.
+      - DEPLOY THIS SUCKER
+      - favicon? could be a really small version of my scribble...(then remove the palm tree from the <title>
+      - CLI for building this webpage? to import into couetil.com? could host this under "www" repo?
+      - self host plausible from raspberry pi using my domain? https://plausible.io/docs/self-hosting
+      - could also host plausible using sandstorm? https://sandstorm.io/install (install this anyway on PI and check out the apps)
+        sandstorm may not be worked on anymore, try homelabOS? https://homelabos.com/
+      - host google font files from CDN using my domain
+      - dark mode, add a toggle in the top right of the page, and also check
+        the system setting
+      - different images during the day vs. at night, or do it based on Dark Mode
+
+    -->
+
+    <!--
+      high above SF
+      floating on a pretty cloud
+      my digital life
+    -->
+    <section id="content">
+      <picture id="background">
+        <source media="(min-width: 2050px)"
+                type="image/webp"
+                srcset="sat/R20m/output80_nosharp.webp">
+        <source media="(min-width: 2050px)"
+                type="image/jpeg"
+                srcset="sat/R20m/output80_nosharp.jpg">
+        <source media="(min-width: 900px) and (max-width: 2049px)"
+                type="image/webp"
+                srcset="sat/R60m/output80_nosharp.webp,
+                        sat/R20m/output80_nosharp.webp 2x">
+        <source media="(min-width: 900px) and (max-width: 2049px)"
+                type="image/jpeg"
+                srcset="sat/R60m/output80_nosharp.jpg,
+                        sat/R20m/output80_nosharp.jpg 2x">
+        <source media="(min-width: 500px) and (max-width: 899px)"
+                type="image/webp"
+                srcset="sat/R60m/output80_nosharp_1200.webp,
+                        sat/R60m/output80_nosharp.webp 2x,">
+        <source media="(min-width: 500px) and (max-width: 899px)"
+                type="image/jpeg"
+                srcset="sat/R60m/output80_nosharp_1200.jpg,
+                        sat/R60m/output80_nosharp.jpg 2x">
+        <source type="image/webp"
+                srcset="sat/R60m/output80_nosharp_700.webp,
+                        sat/R60m/output80_nosharp.webp 2x">
+        <img src="sat/R60m/output80_nosharp_700.jpg" srcset="sat/R60m/output80_nosharp.jpg 2x" alt="background satellite image">
+      </picture>
+      <div id="cloud">
+        <img id="scribble" src="./scribble.svg">
+        <header>
+          <h1>
+            Connor Couetil
+          </h1>
+          <nav>
+            <span class="nav-item">
+              <a href="">
+                Portfolio
+              </a>
+              <span class="underline"></span>
+            </span>
+            <span class="nav-item">
+              <a href="">
+                Resume
+              </a>
+              <span class="underline"></span>
+            </span>
+            </span>
+            <span class="nav-item">
+              <a href="">
+                GitHub
+              </a>
+              <span class="underline"></span>
+            </span>
+            <span class="nav-item">
+              <a href="">
+                LinkedIn
+              </a>
+              <span class="underline"></span>
+            </span>
+            <span class="nav-item">
+              <a href="">
+                About
+              </a>
+              <span class="underline"></span>
+            </span>
+          </nav>
+        </header>
+      </div>
+    </section>
+    <script type="module" src="/index.js"></script>
+  </body>
+</html>
