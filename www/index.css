@@ -1,3 +1,35 @@
+@font-face {
+    font-family: 'subset-Bungee';
+    src: local('Bungee'), local('Bungee-Regular'),
+        url('fonts/subset-Bungee-Regular.woff2') format('woff2'),
+        url('fonts/subset-Bungee-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'Rubik';
+    src: local('Rubik Regular'), local('Rubik-Regular'),
+        url('fonts/Rubik-Regular.woff2') format('woff2'),
+        url('fonts/Rubik-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+/*
+@font-face {
+    font-family: 'Bungee';
+    src: local('Bungee'), local('Bungee-Regular'),
+        url('fonts/Bungee-Regular.woff2') format('woff2'),
+        url('fonts/Bungee-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+*/
+
 html, body {
   width: 100%;
   min-height: 100%;
@@ -57,7 +89,7 @@ header {
 }
 header h1 {
   font-size: 3.70rem;
-  font-family: 'Bungee', monospace;
+  font-family: 'subset-Bungee', monospace;
   margin: 0;
 }
 nav {

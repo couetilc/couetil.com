@@ -49,10 +49,11 @@ check this out as a guide to optimizing the images using lambda: https://develop
 
 ## TODO
 
+- add step to github action that invalidates cloudfront cache, and test with a
+  deploy. Also determine if will need to add cloudflare cache invalidation call.
 - download fonts from Google Fonts to this repo and deploy
-- create a favicon, it will be a small version of my scribble cloud (then remove
-  palm tree from the title?)
 - add links to github, resume, etc.
+- when uploading to GitHub, add cache headers so TTL is 1 week
 - self host plausible from raspberry pi using my domain? https://plausible.io/docs/self-hosting.
   could also host plausible using sandstorm? https://sandstorm.io/instal
   (install this anyway on PI and check out the apps) sandstorm may not be
