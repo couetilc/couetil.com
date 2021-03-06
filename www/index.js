@@ -26,6 +26,7 @@ function swingBackground (maxSkew = 0, options = {}) {
     const skew_x = maxSkew * perc_skew_x;
     const skew_y = maxSkew * perc_skew_y;
     document.querySelectorAll(selector).forEach(el => {
+      // eslint-disable-next-line no-param-reassign
       el.style.transform = `translate(${skew_x}px, ${skew_y}px) scale(1.25)`;
     });
   }
