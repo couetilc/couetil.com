@@ -2,7 +2,8 @@
     font-family: 'Rubik';
     src: local('Rubik Regular'), local('Rubik-Regular'),
         url('fonts/Rubik-Regular.woff2') format('woff2'),
-        url('fonts/Rubik-Regular.woff') format('woff');
+        url('fonts/Rubik-Regular.woff') format('woff'),
+        url('fonts/Rubik-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: block;
@@ -12,7 +13,19 @@
     font-family: 'Bungee';
     src: local('Bungee'), local('Bungee-Regular'),
         url('fonts/Bungee-Regular.woff2') format('woff2'),
-        url('fonts/Bungee-Regular.woff') format('woff');
+        url('fonts/Bungee-Regular.woff') format('woff'),
+        url('fonts/Bungee-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'subset-Bungee';
+    src: local('Bungee'), local('Bungee-Regular'),
+        url('fonts/subset-Bungee-Regular.woff2') format('woff2'),
+        url('fonts/subset-Bungee-Regular.woff') format('woff'),
+        url('fonts/subset-Bungee-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: block;
