@@ -2,10 +2,33 @@
 
 The code powering https://couetil.com
 
+## Development
+
+To start a development server with snowpack:
+```sh
+npm start
+```
+
+To build for production:
+```sh
+npm run build
+```
+
+## Deployment
+
+To deploy to production at https://couetil.com (and https://www.couetil.com and
+https://connor.couetil.com), push your changes to the [GitHub Repository](https://github.com/couetilc/couetil.com)
+and publish a new release. Name the release as the current date, in the format
+"YYYY-MM-DD", optionally adding a "#[number]" if you are publishing multiple
+releases on the same day. For example, if you are releasing a second release on
+March 5, 2021, you will name and tag the release "2021-03-05#1". A GitHub action
+will then deploy the release.
+
 ## Infrastructure
 
-This website is current deployed on a Digital Ocean droplet "mangrove". It will
-be replaced by a Cloudflare Worker CDN static thingamabob.
+Website files are stored on an S3 bucket "couetil.com" under the "www" prefix.
+A Cloudfront distribution sits in front of the S3 bucket, and Cloudflare proxies
+web requests to the distribution through DNS.
 
 ## Domain Name
 
@@ -26,3 +49,19 @@ Node.js package: https://www.npmjs.com/package/gm
 for using ImageMagic in Lambda function: https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:145266761615:applications~image-magick-lambda-layer
 
 check this out as a guide to optimizing the images using lambda: https://developer.happyr.com/aws-lambda-image-optimization-with-serverless
+
+## TODO
+
+- download fonts from Google Fonts to this repo and deploy
+- create a favicon, it will be a small version of my scribble cloud (then remove
+  palm tree from the title?)
+- add links to github, resume, etc.
+- self host plausible from raspberry pi using my domain? https://plausible.io/docs/self-hosting.
+  could also host plausible using sandstorm? https://sandstorm.io/instal
+  (install this anyway on PI and check out the apps) sandstorm may not be
+  worked on anymore, try homelabOS? https://homelabos.com/
+- dark mode, add a toggle in the top right of the page, and also check
+  the system setting
+- different images during the day vs. at night, or do it based on Dark Mode
+- github action that takes screenshots of the website when a PR is made against
+  it? Using this: https://htmlcsstoimage.com/
