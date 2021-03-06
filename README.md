@@ -17,12 +17,9 @@ npm run build
 ## Deployment
 
 To deploy to production at https://couetil.com (and https://www.couetil.com and
-https://connor.couetil.com), push your changes to the [GitHub Repository](https://github.com/couetilc/couetil.com)
-and publish a new release. Name the release as the current date, in the format
-"YYYY-MM-DD", optionally adding a "#[number]" if you are publishing multiple
-releases on the same day. For example, if you are releasing a second release on
-March 5, 2021, you will name and tag the release "2021-03-05#1". A GitHub action
-will then deploy the release.
+https://connor.couetil.com), push your changes to the `master` branch in the
+project's [GitHub Repository](https://github.com/couetilc/couetil.com). A
+GitHub Action will then deploy the website.
 
 ## Infrastructure
 
