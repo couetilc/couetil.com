@@ -24,8 +24,7 @@ GitHub Action will then deploy the website.
 ## Infrastructure
 
 Website files are stored on an S3 bucket "couetil.com" under the "www" prefix.
-A Cloudfront distribution sits in front of the S3 bucket, and Cloudflare proxies
-web requests to the distribution through DNS.
+A Cloudfront distribution sits in front of the S3 bucket.
 
 ## Domain Name
 
@@ -52,6 +51,8 @@ check this out as a guide to optimizing the images using lambda: https://develop
 - add step to github action that invalidates cloudfront cache, and test with a
   deploy. Also determine if will need to add cloudflare cache invalidation call.
 - download fonts from Google Fonts to this repo and deploy
+- add a 404 or error page for users (or just add a JSON { error: 404 }) in cloudfront
+  and s3, so errors and missing pages have a non-AWS response.
 - add links to github, resume, etc.
 - when uploading to GitHub, add cache headers so TTL is 1 week
 - self host plausible from raspberry pi using my domain? https://plausible.io/docs/self-hosting.

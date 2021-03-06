@@ -52,10 +52,3 @@ jobs:
           aws cloudfront create-invalidation
           --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
           --paths "/*"
-
-      - name: Purge Cloudflare Cache
-        run: >
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/023e105f4ecef8ad9ca31a8372d0c353/purge_cache"
-          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
-          -H "Content-Type: application/json"
-          --data '{"purge_everything":true}'
