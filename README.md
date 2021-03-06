@@ -59,6 +59,10 @@ check this out as a guide to optimizing the images using lambda: https://develop
   could also host plausible using sandstorm? https://sandstorm.io/instal
   (install this anyway on PI and check out the apps) sandstorm may not be
   worked on anymore, try homelabOS? https://homelabos.com/
+- check out budget.json see https://web.dev/use-lighthouse-for-performance-budgets/
+- on mobile, stack "CONNOR" on top of "COUETIL" and make both words the same width, no more both words on same line
+- I might want to separate out the 2x images into separate <code><picture></code>
+  elements, for some reason chrome requests and downloads both the 1x and 2x satellite images
 - dark mode, add a toggle in the top right of the page, and also check
   the system setting
 - different images during the day vs. at night, or do it based on Dark Mode

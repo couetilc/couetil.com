@@ -1,14 +1,3 @@
-/*
-@font-face {
-    font-family: 'subset-Bungee';
-    src: local('Bungee'), local('Bungee-Regular'),
-        url('fonts/subset-Bungee-Regular.woff2') format('woff2'),
-        url('fonts/subset-Bungee-Regular.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-    font-display: block;
-}
-
 @font-face {
     font-family: 'Rubik';
     src: local('Rubik Regular'), local('Rubik-Regular'),
@@ -28,7 +17,6 @@
     font-style: normal;
     font-display: block;
 }
-*/
 
 html, body {
   width: 100%;
