@@ -13,7 +13,7 @@
   "dependencies": {
     "big-integer": "^1.6.48",
     "bplist-parser": "^0.1.1",
-    "cc-resume": "^2.2.0",
+    "cc-resume": "^2.2.1",
     "default-browser-id": "^2.0.0",
     "esbuild": "^0.8.55",
     "fsevents": "^2.3.2",
