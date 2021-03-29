@@ -1,0 +1,127 @@
+#content {
+  justify-content: center;
+  font-family: 'Rubik', system-ui; 
+  align-items: center;
+  margin: 0;
+  z-index: -2;
+}
+#background {
+  overflow: hidden;
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+#background * {
+  transition:  transform 1.5s ease;
+}
+#background img {
+  min-height: 100%;
+}
+#cloud {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  transition:  transform .2s linear;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+#scribble {
+  position: absolute;
+}
+header {
+  z-index: 1;
+  position: absolute;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  text-align: center;
+}
+header h1 {
+  font-size: 3.70rem;
+  font-family: 'subset-Bungee', monospace;
+  margin: 0;
+}
+nav {
+  border-top: 2px solid black;
+  padding: .25rem;
+  z-index: 1;
+  display: flex;
+  flex-flow: row nowrap;
+  width: fit-content;
+}
+nav a {
+  text-decoration: none;
+  color: black;
+}
+.nav-item {
+  display: flex;
+  flex-flow: column nowrap;
+  margin: .5rem 1rem;
+  align-items: center;
+}
+.underline {
+  width: 0px;
+  border-bottom: 2px solid white;
+  transition: width .25s ease-in-out, border-bottom .2s ease-out;;
+}
+.nav-item:hover .underline {
+  width: 100%;
+  border-bottom: 2px solid #222222;
+}
+@media screen and (min-width: 550px) and (max-width: 750px) {
+  #scribble {
+    width: 550px;
+  }
+  header h1 {
+    font-size: 2.75rem;
+  }
+  nav a {
+    font-size: 1rem;
+  }
+  .nav-item {
+    margin: .5rem;
+  }
+}
+@media screen and (max-width: 550px) {
+  #scribble {
+    display: none;
+  }
+  header h1 {
+    font-size: 2.25rem;
+    text-shadow:
+      2px 2px 8px white,
+      -2px -2px 8px white;
+  }
+  nav {
+    margin-top: 1rem;
+    border-top: none;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+  }
+  nav a {
+    font-size: 1.5rem;
+    color: white;
+    text-shadow:
+      4px 4px 16px black,
+      -4px -4px 16px black,
+      -4px 4px 16px black,
+      4px -4px 16px black
+      ;
+  }
+  .underline {
+    border-bottom: 1px solid black;
+  }
+  .nav-item:hover .underline {
+    border-bottom: 1px solid white;
+  }
+}
