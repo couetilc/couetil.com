@@ -17,4 +17,5 @@ services:
 
 volumes:
   caddy-certificates:
-    driver: local
+    external: true
+    name: caddy-certificates

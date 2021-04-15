@@ -6,7 +6,7 @@ services:
     environment:
       - GEOLITE2_COUNTRY_DB
     volumes:
-      - geoip:/geoip:ro
+      - geoip-data:/geoip:ro
 
   geoip:
     image: maxmindinc/geoipupdate:v4.6.0
@@ -16,8 +16,9 @@ services:
       - GEOIPUPDATE_ACCOUNT_ID
       - GEOIPUPDATE_LICENSE_KEY
     volumes:
-      - geoip:/usr/share/GeoIP
+      - geoip-data:/usr/share/GeoIP
 
 volumes:
-  geoip:
-    driver: local
+  geoip-data:
+    external: true
+    name: geoip-data
