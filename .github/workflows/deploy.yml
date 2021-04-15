@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - master
+    tags:
+      - prod
+  pull_request:
+    branches:
+      - 'master'
   workflow_dispatch:
 
 jobs:
@@ -35,3 +40,28 @@ jobs:
       - name: Test
         run: |
           npm run test
+
+      - name: Install SSH Key
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/prod')
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOST }}
+
+      - name: Rsync to Remote
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/prod')
+        run: >
+          rsync -av
+          bootstrap.sh
+          secrets.yml
+          compose
+          build
+          caddy
+          plausible
+          ${{ secrets.SSH_USER }}@${{ SSH_HOST }}:~/deployment
+
+      - name: Re-deploy
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/prod')
+        run: >
+          ssh ${{ secrets.SSH_USER }}@${{ SSH_HOST }}
+          'cd deployment && ./bootstrap.sh'
