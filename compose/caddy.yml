@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  caddy-gen:
+    container_name: couetil-caddy-gen
+    image: "couetilc/caddy-gen:1.0.1"
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - caddy-certificates:/data/caddy
+      - ../caddy/Caddyfile:/tmp/Caddyfile
+      - ../build:/srv/couetil/www
+    environment:
+      CADDY_SNIPPET: /tmp/Caddyfile
+
+volumes:
+  caddy-certificates:
+    driver: local

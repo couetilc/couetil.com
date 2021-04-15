@@ -1,0 +1,28 @@
+(serveCouetil) {
+  root * /srv/couetil/www
+  templates
+  file_server
+  encode zstd gzip
+}
+
+(redirectHttps) {
+  @http {
+    protocol http
+  }
+  redir @http https://{host}{uri}
+}
+
+couetil.com {
+  import redirectHttps
+  import serveCouetil
+}
+
+www.couetil.com {
+  import redirectHttps
+  import serveCouetil
+}
+
+connor.couetil.com {
+  import redirectHttps
+  import serveCouetil
+}

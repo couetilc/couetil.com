@@ -1,0 +1,23 @@
+version: "3.3"
+services:
+  plausible:
+    depends_on:
+      - geoip
+    environment:
+      - GEOLITE2_COUNTRY_DB
+    volumes:
+      - geoip:/geoip:ro
+
+  geoip:
+    image: maxmindinc/geoipupdate:v4.6.0
+    environment:
+      - GEOIPUPDATE_EDITION_IDS
+      - GEOIPUPDATE_FREQUENCY
+      - GEOIPUPDATE_ACCOUNT_ID
+      - GEOIPUPDATE_LICENSE_KEY
+    volumes:
+      - geoip:/usr/share/GeoIP
+
+volumes:
+  geoip:
+    driver: local
