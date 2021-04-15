@@ -4,7 +4,7 @@ The code powering https://couetil.com
 
 ## Development
 
-To start a development server with snowpack:
+To start a development server with [snowpack](https://github.com/snowpackjs/snowpack):
 ```sh
 npm start
 ```
@@ -17,14 +17,15 @@ npm run build
 ## Deployment
 
 To deploy to production at https://couetil.com (and https://www.couetil.com and
-https://connor.couetil.com), push your changes to the `master` branch in the
-project's [GitHub Repository](https://github.com/couetilc/couetil.com). A
-GitHub Action will then deploy the website.
+https://connor.couetil.com), push a new tag `prod` to the project's [GitHub
+Repository](https://github.com/couetilc/couetil.com). A GitHub Action will then
+deploy the website.
 
 ## Infrastructure
 
-Website files are stored on an S3 bucket "couetil.com" under the "www" prefix.
-A Cloudfront distribution sits in front of the S3 bucket.
+Website files are stored on a [Digital Ocean](http://digitalocean.com/) droplet
+and services are managed by [Docker Compose](https://docs.docker.com/compose/).
+[Caddy](https://caddyserver.com/) acts as a file server and reverse proxy.
 
 ## Domain Name
 
