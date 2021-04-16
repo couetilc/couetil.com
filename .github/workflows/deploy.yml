@@ -24,7 +24,7 @@ jobs:
         id: nvm
 
       - name: Setup Node.js Version
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
           registry-url: 'https://registry.npmjs.org'
