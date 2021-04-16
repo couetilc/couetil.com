@@ -28,7 +28,7 @@
     "pify": "^5.0.0",
     "resolve": "^1.20.0",
     "rollup": "^2.40.0",
-    "untildify": "^2.1.0"
+    "untildify": "^4.0.0"
   },
   "scripts": {
     "start": "snowpack dev",
