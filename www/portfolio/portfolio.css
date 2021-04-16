@@ -1,0 +1,9 @@
+#coming-soon {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+}
