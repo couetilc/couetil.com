@@ -3,7 +3,7 @@
     "eslint": "^7.24.0",
     "eslint-config-cc-lint": "^1.4.0",
     "eslint-plugin-node": "^11.1.0",
-    "snowpack": "^3.0.13"
+    "snowpack": "^3.3.2"
   },
   "name": "couetil.com",
   "description": "check it out https://couetil.com",
