@@ -29,8 +29,16 @@ jobs:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install Dependencies
-        uses: bahmutov/npm-install@v1.7.4
+      - name: Cache .npm
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-dot-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.cache-name }}
+            ${{ runner.os }}
 
       - name: Build
         run: npm run build
