@@ -17,9 +17,11 @@ npm run build
 ## Deployment
 
 To deploy to production at https://couetil.com (and https://www.couetil.com and
-https://connor.couetil.com), push a new tag `prod` to the project's [GitHub
-Repository](https://github.com/couetilc/couetil.com). A GitHub Action will then
-deploy the website.
+https://connor.couetil.com), push a new tag `vYYYY.MM.DD.##` to the project's
+[GitHub Repository](https://github.com/couetilc/couetil.com), where `YYYY` is
+current year, `MM` the month, `DD` the day, and `##` the number of releases
+that day. A GitHub [Action](https://github.com/couetilc/couetil.com/blob/master/.github/workflows/build_test_deploy.yml)
+will then deploy the website.
 
 ## Infrastructure
 
