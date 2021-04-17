@@ -1,8 +1,6 @@
 {
   "devDependencies": {
-    "eslint": "^7.24.0",
-    "eslint-config-cc-lint": "^1.4.0",
-    "eslint-plugin-node": "^11.1.0",
+    "cc-lint": "^0.1.0",
     "snowpack": "^3.3.3"
   },
   "name": "couetil.com",
@@ -35,12 +33,7 @@
     "build:resume": "cc-resume build --build build/ --out resume/ --public-url /resume/ -v",
     "build": "snowpack build && npm run build:resume",
     "serve": "python3 -m http.server --directory build 1234",
-    "test": "eslint www"
-  },
-  "eslintConfig": {
-    "extends": [
-      "cc-lint"
-    ]
+    "test": "cc-lint www"
   },
   "repository": {
     "type": "git",
