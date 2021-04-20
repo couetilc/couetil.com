@@ -13,7 +13,7 @@
     "bplist-parser": "^0.3.0",
     "cc-resume": "^2.4.0",
     "default-browser-id": "^3.0.0",
-    "esbuild": "^0.8.55",
+    "esbuild": "^0.11.12",
     "fsevents": "^2.3.2",
     "function-bind": "^1.1.1",
     "has": "^1.0.3",
@@ -25,7 +25,7 @@
     "path-parse": "^1.0.6",
     "pify": "^5.0.0",
     "resolve": "^1.20.0",
-    "rollup": "^2.40.0",
+    "rollup": "^2.45.2",
     "untildify": "^4.0.0"
   },
   "scripts": {
