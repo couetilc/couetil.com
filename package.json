@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "cc-lint": "^0.2.0",
-    "snowpack": "^3.3.3"
+    "snowpack": "^3.3.4"
   },
   "name": "couetil.com",
   "description": "check it out https://couetil.com",
