@@ -3,31 +3,5 @@
   local_certs
 }
 
-(serveCouetil) {
-  root * /srv/couetil/www
-  templates
-  file_server
-  encode zstd gzip
-}
+import /tmp/Caddyfile
 
-(redirectHttps) {
-  @http {
-    protocol http
-  }
-  redir @http https://{host}{uri}
-}
-
-couetil.com {
-  import redirectHttps
-  import serveCouetil
-}
-
-www.couetil.com {
-  import redirectHttps
-  import serveCouetil
-}
-
-connor.couetil.com {
-  import redirectHttps
-  import serveCouetil
-}

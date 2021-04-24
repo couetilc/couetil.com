@@ -5,6 +5,15 @@
   encode zstd gzip
 }
 
+(cacheCouetil) {
+  route {
+    header cache-control max-age=86400
+    header /sat/* cache-control max-age=604800
+    header /fonts/* cache-control max-age=604800
+    header /img/* cache-control max-age=604800
+  }
+}
+
 (redirectHttps) {
   @http {
     protocol http
@@ -12,17 +21,10 @@
   redir @http https://{host}{uri}
 }
 
+connor.couetil.com ,
+www.couetil.com,
 couetil.com {
   import redirectHttps
   import serveCouetil
-}
-
-www.couetil.com {
-  import redirectHttps
-  import serveCouetil
-}
-
-connor.couetil.com {
-  import redirectHttps
-  import serveCouetil
+  import cacheCouetil
 }
