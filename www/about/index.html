@@ -17,42 +17,10 @@
   <body>
     <!--
       {{ placeholder "time.now.common_log" }}
+      path: {{ placeholder "http.request.uri.path" }}
     -->
     <section id="about">
-      <header>
-        <a href="/">
-          <h1>
-            Connor Couetil
-          </h1>
-        </a>
-        <nav>
-          <span class="nav-item">
-            <a href="">
-              Portfolio
-            </a>
-            <span class="underline"></span>
-          </span>
-          <span class="nav-item">
-            <a href="/resume/index.html">
-              Resume
-            </a>
-            <span class="underline"></span>
-          </span>
-          </span>
-          <span class="nav-item">
-            <a href="https://github.com/couetilc">
-              <img src="/GitHub-Mark-32px.png">
-            </a>
-            <span class="underline"></span>
-          </span>
-          <span class="nav-item">
-            <a href="https://linkedin.com/in/connorcouetil">
-              <img src="/LI-In-Bug.png">
-            </a>
-            <span class="underline"></span>
-          </span>
-        </nav>
-      </header>
+      {{ include "/templates/header.tmpl" }}
       <p>
         I am a full-stack web developer and software engineer, an expert in
         Javascript/Node.js development and user interface design using React

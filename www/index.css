@@ -31,6 +31,26 @@
     font-display: block;
 }
 
+@font-face {
+    font-family: 'Bitter';
+    src: url('fonts/Bitter-Italic.woff2') format('woff2'),
+        url('fonts/Bitter-Italic.woff') format('woff'),
+        url('fonts/Bitter-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bitter';
+    src: url('fonts/Bitter-Regular.woff2') format('woff2'),
+        url('fonts/Bitter-Regular.woff') format('woff'),
+        url('fonts/Bitter-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 html, body {
   width: 100%;
   min-height: 100%;
@@ -38,7 +58,38 @@ html, body {
   padding: 0;
   font-family: 'Rubik', system-ui; 
 }
+
 html {
   background-color: black;
   font-size: 18px;
+}
+
+header {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  padding: 0;
+  margin: 0;
+  font-family: 'subset-Bungee', monospace;
+  font-size: 1.75em;
+}
+
+nav {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding-top: .25em;
+}
+
+nav .nav-item {
+  margin: 0 .5em;
+}
+
+header a {
+  color: black;
+  text-decoration: none;
 }
