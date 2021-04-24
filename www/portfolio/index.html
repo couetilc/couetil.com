@@ -28,6 +28,44 @@
         <div class="portfolio-item">
           <h1 class="portfolio-item-heading">
             <div>
+              Couetil.com
+              <span class="stripe bg-color-purple"></span>
+            </div>
+          </h1>
+          <h2 class="portfolio-item-subheading">
+            Personal website built from a public GitHub repo
+          </h2>
+          <a class="portfolio-item-preview" href="https://github.com/couetilc/couetil.com">
+            <img src="/img/couetilcom.jpg">
+          </a>
+          <ul class="portfolio-item-summary">
+            <li>
+              Powered by <a href="https://caddyserver.com/">Caddy server</a>
+              and generated using
+              <a href="https://golang.org/pkg/text/template/">Go templates</a>
+              and <a href="https://www.snowpack.dev/">Snowpack</a>.
+            </li>
+            <li>
+              Deployed with <a href="https://docs.docker.com/compose/">Docker Compose</a>
+              on a <a href="https://www.digitalocean.com/">Digital Ocean</a> droplet along with a self-hosted
+              <a href="https://whoisit.couetil.com/couetil.com">analytics service</a>.
+            </li>
+            <li>
+              Secrets are encrypted with PGP and managed using
+              <a href="https://github.com/mozilla/sops">Mozilla sops</a>,
+              allowing them to be stored within git.
+            </li>
+            <li>
+              Satellite images are taken by <a href="https://sentinel.esa.int/web/sentinel/missions/sentinel-2">Sentinel-2</a>
+              and sourced from <a href="https://registry.opendata.aws/sentinel-2/">AWS S3</a>.
+            </li>
+            <li><a href="https://couetil.com">Website URL</a> and <a href="https://github.com/couetilc/couetil.com">GitHub Repo</a>.</li>
+          </ul>
+        </div>
+
+        <div class="portfolio-item">
+          <h1 class="portfolio-item-heading">
+            <div>
               EquineLungExperts.com
               <span class="stripe bg-color-green"></span>
             </div>
@@ -43,7 +81,7 @@
             <li>Designed using <a href="https://www.sketch.com/">Sketch</a> and styled with <a href="https://sass-lang.com/">SASS</a>.</li>
             <li>Wrote marketing copy, created logo and other graphics.</li>
             <li><a href="https://nextjs.org/">Next.js</a> powered <a href="https://reactjs.org/">React</a> front-end served by <a href="https://aws.amazon.com/cloudfront/">AWS Cloudfront</a>.</li>
-            <li><a href="https://equinelungexperts.com">Website URL</a> and <a href="https://github.com/couetilc/equine-lung-experts">Github Repo</a>.</li>
+            <li><a href="https://equinelungexperts.com">Website URL</a> and <a href="https://github.com/couetilc/equine-lung-experts">GitHub Repo</a>.</li>
           </ul>
         </div>
 
@@ -65,7 +103,7 @@
             <li>Prepared <a href="https://github.com/jaketrent/react-social-icons/releases/tag/v5.0.0">v5.0.0</a> release, closing 15+ issues and pull requests.</li>
             <li>Designed new icons using <a href="https://inkscape.org/">Inkscape</a> and updated documentation for contributors.</li>
             <li>Created CI/CD pipeline with <a href="https://github.com/features/actions">GitHub Actions</a> for testing contributions and publishing new releases.</li>
-            <li><a href="https://github.com/jaketrent/react-social-icons">Github Repo</a> and <a href="https://www.npmjs.com/package/react-social-icons">NPM Package</a>.</li>
+            <li><a href="https://github.com/jaketrent/react-social-icons">GitHub Repo</a> and <a href="https://www.npmjs.com/package/react-social-icons">NPM Package</a>.</li>
           </ul>
         </div>
 
@@ -109,52 +147,26 @@
         <div class="portfolio-item">
           <h1 class="portfolio-item-heading">
             <div>
-              Babblenauts
-              <span class="stripe bg-color-orange"></span>
-            </div>
-          </h1>
-          <h2 class="portfolio-item-subheading">
-            Winner of "Most Inspirational" Hackathon project at NASA SpaceApps
-            2018 in NYC
-          </h2>
-          <a class="portfolio-item-preview" href="https://2018.spaceappschallenge.org/challenges/universe-beauty-and-wonder/virtual-space-exploration/teams/babblenauts/project">
-            <img src="/img/babblenauts.jpg">
-          </a>
-          <ul class="portfolio-item-summary">
-            <li>
-              Voice control interface for <a href="https://www.openspaceproject.com/">OpenSpace</a>, an open-source C++ project
-              for visualizing the known universe and satellite data.
-            </li>
-            <li>
-              Came up with initial idea, designed React.js front-end for
-              controlling the interface, and implemented
-              <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API">Speech Recognition API</a>.
-            </li>
-            <li><a href="https://github.com/couetilc/spaceapps2018">GitHub Repo</a></li>
-          </ul>
-        </div>
-
-        <div class="portfolio-item">
-          <h1 class="portfolio-item-heading">
-            <div>
-              Résumé
+              resume
               <span class="stripe bg-color-yellow"></span>
             </div>
           </h1>
           <h2 class="portfolio-item-subheading">
-            My résumé, built using open web technologies
+            My open-source résumé, built using web technologies
           </h2>
           <a class="portfolio-item-preview" href="https://github.com/couetilc/resume">
             <img src="/img/resume.jpg">
           </a>
           <ul class="portfolio-item-summary">
             <li>
-              Developed with a CLI anyone can use to produce their own résumé
+              Developed with <a href="https://github.com/couetilc/resume/blob/main/cli.js">a CLI</a> anyone can use to produce their own résumé
               webpage and PDF.
             </li>
             <li>
-              Styled with SASS and uses Webpack to compile all assets as an
-              HTML bundle. Puppeteer is then loaded to render the résumé to PDF.
+              Styled with <a href="https://sass-lang.com/">SASS</a> and uses
+              <a href="https://webpack.js.org/">Webpack</a> to compile all
+              assets as an HTML bundle. <a href="https://github.com/puppeteer/puppeteer">Puppeteer</a>
+              is then loaded to render the résumé to PDF.
             </li>
             <li>
               <a href="https://github.com/couetilc/resume">GitHub Repo</a> and <a href="https://npmjs.com/package/cc-resume">NPM Package</a>.
@@ -190,9 +202,36 @@
           </ul>
         </div>
 
+        <div class="portfolio-item">
+          <h1 class="portfolio-item-heading">
+            <div>
+              Babblenauts
+              <span class="stripe bg-color-orange"></span>
+            </div>
+          </h1>
+          <h2 class="portfolio-item-subheading">
+            Winner of "Most Inspirational" Hackathon project at NASA SpaceApps
+            2018 in NYC
+          </h2>
+          <a class="portfolio-item-preview" href="https://2018.spaceappschallenge.org/challenges/universe-beauty-and-wonder/virtual-space-exploration/teams/babblenauts/project">
+            <img src="/img/babblenauts.jpg">
+          </a>
+          <ul class="portfolio-item-summary">
+            <li>
+              Voice control interface for <a href="https://www.openspaceproject.com/">OpenSpace</a>, an open-source C++ project
+              for visualizing the known universe and satellite data.
+            </li>
+            <li>
+              Came up with initial idea, designed React.js front-end for
+              controlling the interface, and implemented
+              <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API">Speech Recognition API</a>.
+            </li>
+            <li><a href="https://github.com/couetilc/spaceapps2018">GitHub Repo</a></li>
+          </ul>
+        </div>
+
       </div>
 
     </section>
-    <script type="module" src="/index.js"></script>
   </body>
 </html>
