@@ -18,6 +18,10 @@ header {
   border-bottom: 2px solid black;
 }
 
+nav .nav-item {
+  margin: 0 .5em;
+}
+
 .portfolio-items {
   margin: 1em 0;
 }
