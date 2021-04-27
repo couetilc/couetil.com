@@ -17,7 +17,7 @@
     "fsevents": "^2.3.2",
     "function-bind": "^1.1.1",
     "has": "^1.0.3",
-    "is-core-module": "^2.2.0",
+    "is-core-module": "^2.3.0",
     "is-docker": "^2.2.1",
     "is-wsl": "^2.2.0",
     "open": "^8.0.6",
