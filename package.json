@@ -25,7 +25,7 @@
     "path-parse": "^1.0.6",
     "pify": "^5.0.0",
     "resolve": "^1.20.0",
-    "rollup": "^2.49.0",
+    "rollup": "^2.58.3",
     "untildify": "^4.0.0"
   },
   "scripts": {
