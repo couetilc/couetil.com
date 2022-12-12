@@ -13,7 +13,7 @@
     "bplist-parser": "^0.3.0",
     "cc-resume": "^2.4.0",
     "default-browser-id": "^3.0.0",
-    "esbuild": "^0.12.1",
+    "esbuild": "^0.16.4",
     "fsevents": "^2.3.2",
     "function-bind": "^1.1.1",
     "has": "^1.0.3",
