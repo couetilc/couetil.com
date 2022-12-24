@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+psql() {
+  docker compose exec postgres psql -U pguser
+}
+
+dbmate() {
+  docker compose run dbmate "$@"
+}
+
+"$@"

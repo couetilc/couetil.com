@@ -1,0 +1,82 @@
+services:
+
+  postgres:
+    image: postgres:15
+    hostname: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: 12345
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      # persists postgres data in a docker volume
+      - pg-data:/var/lib/postgresql/data
+      # puts db initialization scripts into container to be run by postgres
+      # on a fresh database after startup.
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+
+  adminer:
+    image: adminer
+    hostname: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  postgrest:
+    image: postgrest/postgrest
+    hostname: postgrest
+    restart: always
+    ports:
+      - 5433:5433
+    environment:
+      POSTGRES_PASSWORD: 12345
+      PGRST_DB_URI: "postgres://pguser:12345@postgres:5432/core"
+      PGRST_DB_SCHEMAS: "api_todo_app"
+      PGRST_DB_ANON_ROLE: "anon"
+      PGRST_JWT_SECRET: "reallyreallyreallyreallyverysafe"
+      PGRST_JWT_SECRET_IS_BASE64: False
+      PGRST_SERVER_PORT: 5433
+      PGRST_SERVER_HOST: postgrest
+    networks:
+      - backend
+      - frontend
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - 8081:8080
+    expose:
+      - 8080
+    environment:
+      API_URL: http://localhost:5433
+
+  # I don't want dbmate running with my other services, I want this here so I can
+  # configure dbmate to work smoothly with this project's database using a
+  # simple "docker compose run dbmate" command.
+  dbmate:
+    image: amacneil/dbmate
+    hostname: dbmate
+    restart: "no"
+    networks:
+      - backend
+    environment:
+      DATABASE_URL: postgres://pguser:12345@postgres:5432/core?sslmode=disable
+      DBMATE_MIGRATIONS_DIR: /dbmate/migrations
+    volumes:
+      - ./dbmate/migrations/:/dbmate/migrations/:rw
+    working_dir: /dbmate
+    profiles:
+      - dbmate
+
+volumes:
+  pg-data:
+
+networks:
+  backend:
+  frontend:
