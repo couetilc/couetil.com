@@ -22,7 +22,7 @@
     "is-wsl": "^2.2.0",
     "open": "^8.1.0",
     "os-homedir": "^2.0.0",
-    "path-parse": "^1.0.6",
+    "path-parse": "^1.0.7",
     "pify": "^5.0.0",
     "resolve": "^1.20.0",
     "rollup": "^2.49.0",
