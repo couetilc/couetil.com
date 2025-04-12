@@ -17,7 +17,6 @@ func init() {
 }
 
 func main() {
-	fmt.Println(templates.DefinedTemplates())
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -25,9 +24,11 @@ func main() {
 }
 
 func run() error {
-	// TODO: 404 page.
 	// TODO: proper home page, transfer styles and assets
-	http.HandleFunc("/", home)
+	http.HandleFunc("/{$}", home)
+
+	// 404 route
+	http.Handle("/...", http.NotFoundHandler())
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		return err
