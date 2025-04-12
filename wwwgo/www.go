@@ -10,10 +10,10 @@ import (
 
 //go:embed templates
 var templatesFS embed.FS
-var templates *template.Template
+var tmpls *template.Template
 
 func init() {
-	templates = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
+	tmpls = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
 }
 
 func main() {
@@ -40,5 +40,5 @@ func run() error {
 func home(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
-	templates.ExecuteTemplate(res, "home.tmpl", nil)
+	tmpls.ExecuteTemplate(res, "home.tmpl", nil)
 }
