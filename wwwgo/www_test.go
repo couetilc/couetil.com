@@ -28,19 +28,15 @@ func init() {
 		{
 			route: "/404",
 			matchStatus: http.StatusNotFound,
-			matchHeader: "text/html",
+			matchHeader: "text/plain",
 			matchBody: "404",
 		},
 	}
 }
 
 func TestRoutes(t *testing.T) {
-	// todo: ping each route and assert:
-	// - header content-type is text/html
-	// - status is 200 OK
-	// - body is what is either "Hello ..." or "404 not found"
-
-	ts := httptest.NewServer(http.DefaultServeMux)
+	s := NewServer()
+	ts := httptest.NewServer(s)
 	defer ts.Close()
 
 	for _, testcase := range testcases {

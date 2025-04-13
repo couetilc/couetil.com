@@ -8,13 +8,25 @@ import (
 	"embed"
 )
 
+type Server struct {
+	http.Server
+	http.ServeMux
+	*template.Template
+}
+
+type TemplateHandler struct {
+	*template.Template
+	filename string
+}
+
+func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-u")
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, t.filename, nil)
+}
+
 //go:embed templates
 var templatesFS embed.FS
-var tmpls *template.Template
-
-func init() {
-	tmpls = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-}
 
 func main() {
 	if err := run(); err != nil {
@@ -24,21 +36,18 @@ func main() {
 }
 
 func run() error {
-	// TODO: proper home page, transfer styles and assets
-	http.HandleFunc("/{$}", home)
-
-	// 404 route
-	http.Handle("/...", http.NotFoundHandler())
-
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := NewServer().ListenAndServe(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func home(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	res.WriteHeader(http.StatusOK)
-	tmpls.ExecuteTemplate(res, "home.tmpl", nil)
+func NewServer() *Server {
+	s := new(Server)
+	s.Addr = ":8080"
+	s.Server.Handler = &s.ServeMux
+	s.Template = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
+	s.Handle("/{$}", &TemplateHandler{s.Template,"home.tmpl"})
+	return s
 }
