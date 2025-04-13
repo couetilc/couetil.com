@@ -28,7 +28,7 @@ func init() {
 		{
 			route: "/404",
 			matchStatus: http.StatusNotFound,
-			matchHeader: "text/plain",
+			matchHeader: "text/html",
 			matchBody: "404",
 		},
 	}

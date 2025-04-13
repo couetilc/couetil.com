@@ -17,11 +17,12 @@ type Server struct {
 type TemplateHandler struct {
 	*template.Template
 	filename string
+	status int
 }
 
 func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-u")
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(t.status)
 	t.ExecuteTemplate(w, t.filename, nil)
 }
 
@@ -45,9 +46,10 @@ func run() error {
 
 func NewServer() *Server {
 	s := new(Server)
-	s.Addr = ":8080"
+	s.Server.Addr = ":8080"
 	s.Server.Handler = &s.ServeMux
 	s.Template = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-	s.Handle("/{$}", &TemplateHandler{s.Template,"home.tmpl"})
+	s.Handle("/{$}", &TemplateHandler{s.Template, "home.tmpl", http.StatusOK})
+	s.Handle("/", &TemplateHandler{s.Template, "404.tmpl", http.StatusNotFound})
 	return s
 }
