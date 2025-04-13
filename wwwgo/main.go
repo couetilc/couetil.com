@@ -13,6 +13,16 @@ type Server struct {
 	http.ServeMux
 }
 
+func NewServer() *Server {
+	s := new(Server)
+	s.Server.Addr = ":8080"
+	s.Server.Handler = &s.ServeMux
+	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
+	s.Handle("/{$}", &TemplateHandler{tfs, "home.tmpl", http.StatusOK})
+	s.Handle("/", &TemplateHandler{tfs, "404.tmpl", http.StatusNotFound})
+	return s
+}
+
 type TemplateHandler struct {
 	*template.Template
 	filename string
@@ -33,14 +43,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-}
-
-func NewServer() *Server {
-	s := new(Server)
-	s.Server.Addr = ":8080"
-	s.Server.Handler = &s.ServeMux
-	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-	s.Handle("/{$}", &TemplateHandler{tfs, "home.tmpl", http.StatusOK})
-	s.Handle("/", &TemplateHandler{tfs, "404.tmpl", http.StatusNotFound})
-	return s
 }
