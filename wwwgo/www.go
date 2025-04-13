@@ -11,7 +11,6 @@ import (
 type Server struct {
 	http.Server
 	http.ServeMux
-	*template.Template
 }
 
 type TemplateHandler struct {
@@ -40,8 +39,8 @@ func NewServer() *Server {
 	s := new(Server)
 	s.Server.Addr = ":8080"
 	s.Server.Handler = &s.ServeMux
-	s.Template = template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-	s.Handle("/{$}", &TemplateHandler{s.Template, "home.tmpl", http.StatusOK})
-	s.Handle("/", &TemplateHandler{s.Template, "404.tmpl", http.StatusNotFound})
+	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
+	s.Handle("/{$}", &TemplateHandler{tfs, "home.tmpl", http.StatusOK})
+	s.Handle("/", &TemplateHandler{tfs, "404.tmpl", http.StatusNotFound})
 	return s
 }
