@@ -30,18 +30,10 @@ func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 var templatesFS embed.FS
 
 func main() {
-	if err := run(); err != nil {
+	if err := NewServer().ListenAndServe(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-}
-
-func run() error {
-	if err := NewServer().ListenAndServe(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func NewServer() *Server {
