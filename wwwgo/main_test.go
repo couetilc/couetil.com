@@ -23,13 +23,19 @@ func init() {
 			route: "/",
 			matchStatus: http.StatusOK,
 			matchHeader: "text/html",
-			matchBody: "Hello",
+			matchBody: "Connor Couetil",
 		},
 		{
 			route: "/404",
 			matchStatus: http.StatusNotFound,
 			matchHeader: "text/html",
 			matchBody: "404",
+		},
+		{
+			route: "/static/",
+			matchStatus: http.StatusOK,
+			matchHeader: "text/html",
+			matchBody: "index.js",
 		},
 	}
 }
