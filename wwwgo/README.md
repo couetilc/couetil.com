@@ -3,10 +3,12 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
-- get other pages in here: (1) about (2) portfolio
+- get other pages in here: (2) portfolio
+- template partials for header, and meta tags, font preloads, the server time check, favicons, 
 - possible to include (1) time to serve request and (2) time since server boot in response?
 - Dockerize this, so I can deploy an image on AWS Lambda. Resume will be a distinct build stage I pull the final files from.
 - get resume page working
+- make sure Go server is compressing all web pages and assets. It may be a `Transport` setting.
 
 
 NOTE

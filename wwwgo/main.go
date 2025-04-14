@@ -7,6 +7,8 @@ import (
 	"html/template"
 	"embed"
 	"time"
+	"net/url"
+	"strings"
 )
 
 type Server struct {
@@ -19,9 +21,10 @@ func NewServer() *Server {
 	s.Server.Addr = ":8080"
 	s.Server.Handler = &s.ServeMux
 	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-	s.Handle("/{$}", &TemplateHandler{tfs, "home.tmpl", http.StatusOK})
+	s.Handle("/{$}", &TemplateHandler{tfs, "page_home.tmpl", http.StatusOK})
+	s.Handle("/about/", &TemplateHandler{tfs, "page_about.tmpl", http.StatusOK})
 	s.Handle("/static/", http.FileServerFS(staticFS))
-	s.Handle("/", &TemplateHandler{tfs, "404.tmpl", http.StatusNotFound})
+	s.Handle("/", &TemplateHandler{tfs, "page_404.tmpl", http.StatusNotFound})
 	return s
 }
 
@@ -34,7 +37,17 @@ type TemplateHandler struct {
 func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(t.status)
-	t.ExecuteTemplate(w, t.filename, time.Now().UTC())
+	c := &TemplateContext{time.Now().UTC(),r.URL}
+	t.ExecuteTemplate(w, t.filename, c)
+}
+
+type TemplateContext struct {
+	time.Time
+	*url.URL
+}
+
+func (c *TemplateContext) HasPathPrefix(prefix string) bool {
+	return strings.HasPrefix(c.Path, prefix)
 }
 
 //go:embed templates
