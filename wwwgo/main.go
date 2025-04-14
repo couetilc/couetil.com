@@ -23,6 +23,7 @@ func NewServer() *Server {
 	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
 	s.Handle("/{$}", &TemplateHandler{tfs, "page_home.tmpl", http.StatusOK})
 	s.Handle("/about/", &TemplateHandler{tfs, "page_about.tmpl", http.StatusOK})
+	s.Handle("/portfolio/", &TemplateHandler{tfs, "page_portfolio.tmpl", http.StatusOK})
 	s.Handle("/static/", http.FileServerFS(staticFS))
 	s.Handle("/", &TemplateHandler{tfs, "page_404.tmpl", http.StatusNotFound})
 	return s
