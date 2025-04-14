@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"html/template"
 	"embed"
+	"time"
 )
 
 type Server struct {
@@ -19,6 +20,7 @@ func NewServer() *Server {
 	s.Server.Handler = &s.ServeMux
 	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
 	s.Handle("/{$}", &TemplateHandler{tfs, "home.tmpl", http.StatusOK})
+	s.Handle("/static/", http.FileServerFS(staticFS))
 	s.Handle("/", &TemplateHandler{tfs, "404.tmpl", http.StatusNotFound})
 	return s
 }
@@ -32,11 +34,13 @@ type TemplateHandler struct {
 func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(t.status)
-	t.ExecuteTemplate(w, t.filename, nil)
+	t.ExecuteTemplate(w, t.filename, time.Now().UTC())
 }
 
 //go:embed templates
 var templatesFS embed.FS
+//go:embed static
+var staticFS embed.FS
 
 func main() {
 	if err := NewServer().ListenAndServe(); err != nil {
