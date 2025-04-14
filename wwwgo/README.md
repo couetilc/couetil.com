@@ -4,6 +4,7 @@ Go server powering the home page for my domain, [couetil.com](https://www.coueti
 
 TODO
 - template partials for header, and meta tags, font preloads, the server time check, favicons, 
+- fix home page template, needs to use partials
 - is there any way to have go:embed flatten the filesystem for "templatesFS" and "staticFS"? So I don't have to prefix paths with "templates/" and "static/" in go code?
     - maybe instead of fs.FS object, it could be simple path of files, I think that's a go:embed option.
 - possible to include (1) time to serve request and (2) time since server boot in response?
@@ -15,3 +16,25 @@ TODO
 
 NOTE
 - checkout `http/httptrace`, `http/httputil`, and `http/pprof` for robust web server. See what exactly they are used for.
+
+## HTML template convention
+
+All Go template files will be stored in the directory `templates/` with the
+file suffix `.tmpl`. There is a convention for naming templates, which
+influences how they are utilized. Templates prefixed with `layout_` (layouts)
+or `partial_` (partials) are pre-loaded and available for use with the
+[template action "template"](#todo-link-to-godocs) in a regular template. A
+regular template can be invoked by an HTTP handler specified in the
+[`NewServer` function](#todo-link-to-main.go:NewServer). Layouts are HTML
+document skeletons that should expose blocks that can be overriden by a regular
+template and are expected to be used once. Partials do not layout an HTML
+document and may be re-used.
+
+### Available Layouts
+
+Documentation for the available layouts.
+
+#### `layout_default.tmpl`
+
+Pre-loads fonts, loads common stylesheet, and exposes three blocks: `"title"`,
+`"head"`, and `"body"`.
