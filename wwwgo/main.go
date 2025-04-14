@@ -20,22 +20,43 @@ func NewServer() *Server {
 	s := new(Server)
 	s.Server.Addr = ":8080"
 	s.Server.Handler = &s.ServeMux
-	tfs := template.Must(template.ParseFS(templatesFS, "templates/*.tmpl"))
-	s.Handle("/{$}", &TemplateHandler{tfs, "page_home.tmpl", http.StatusOK})
-	s.Handle("/about/", &TemplateHandler{tfs, "page_about.tmpl", http.StatusOK})
-	s.Handle("/portfolio/", &TemplateHandler{tfs, "page_portfolio.tmpl", http.StatusOK})
+	nt := NewNestedTemplate(templatesFS)
+	s.Handle("/{$}", nt.NewHandler("page_home.tmpl", http.StatusOK))
+	s.Handle("/about/{$}", nt.NewHandler("page_about.tmpl", http.StatusOK))
+	s.Handle("/portfolio/{$}", nt.NewHandler("page_portfolio.tmpl", http.StatusOK))
 	s.Handle("/static/", http.FileServerFS(staticFS))
-	s.Handle("/", &TemplateHandler{tfs, "page_404.tmpl", http.StatusNotFound})
+	s.Handle("/", nt.NewHandler("page_404.tmpl", http.StatusNotFound))
 	return s
 }
 
-type TemplateHandler struct {
+type NestedTemplate struct {
+	*template.Template
+	embed.FS
+}
+
+type NestedTemplateHandler struct {
 	*template.Template
 	filename string
 	status int
 }
 
-func (t *TemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func NewNestedTemplate(fs embed.FS) *NestedTemplate {
+	t := new(NestedTemplate)
+	t.Template = template.Must(template.ParseFS(fs, "templates/layout_*.tmpl", "templates/partial_*.tmpl"))
+	t.FS = fs
+	return t
+}
+
+func (nt *NestedTemplate) NewHandler(filename string, status int) *NestedTemplateHandler {
+	h := new(NestedTemplateHandler)
+	clone := template.Must(nt.Clone())
+	h.Template = template.Must(clone.ParseFS(nt.FS, "templates/" + filename))
+	h.filename = filename
+	h.status = status
+	return h
+}
+
+func (t *NestedTemplateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(t.status)
 	c := &TemplateContext{time.Now().UTC(),r.URL}

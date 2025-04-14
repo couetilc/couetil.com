@@ -1,36 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-    <meta name="description" content="About Connor Couetil">
-    <meta name="keywords" content="couetil, connor, software engineering, web development,full-stack developer, cloud software consulting, javascript">
-    <title>About</title>
-    <link rel="preload" href="/static/fonts_Rubik-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/static/fonts_subset-Bungee-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="stylesheet" type="text/css" href="/static/index.css">
-    <link rel="stylesheet" type="text/css" href="/static/about.css">
-  </head>
-  <body>
-    <section id="about">
-      {{ template "partial_nav.tmpl" . }}
-      <p>
-        I am a full-stack web developer and software engineer, an expert in
-        Javascript/Node.js development and user interface design using React
-        with the latest design tools. I contribute to Open-Source software and
-        have developed award-winning projects at Hackathons.
-      </p>
-      <p>
-        The <a href="/static/sat_R60m_output80_nosharp.jpg">background image</a> on my
-        home page is a
-        <a href="https://sentinel.esa.int/web/sentinel/missions/sentinel-2">Sentinel-2</a>
-        satellite image of the Bay Area sourced from <a href="https://registry.opendata.aws/sentinel-2/">AWS S3</a>.
-      </p>
-      <p>
-        This website is Open-Source, <a href="https://github.com/couetilc/couetil.com">check it out on GitHub</a>.
-      </p>
-    </section>
-  </body>
-</html>
+{{ template "layout_default.tmpl" . }}
+{{ define "title" }}About{{ end }}
+{{ define "head" }}
+  <link rel="stylesheet" type="text/css" href="/static/about.css">
+{{ end }}
+{{ define "body" }}
+<section id="about">
+  {{ template "partial_nav.tmpl" . }}
+  <p>
+    I am a full-stack web developer and software engineer, an expert in
+    Javascript/Node.js development and user interface design using React
+    with the latest design tools. I contribute to Open-Source software and
+    have developed award-winning projects at Hackathons.
+  </p>
+  <p>
+    The <a href="/static/sat_R60m_output80_nosharp.jpg">background image</a> on my
+    home page is a
+    <a href="https://sentinel.esa.int/web/sentinel/missions/sentinel-2">Sentinel-2</a>
+    satellite image of the Bay Area sourced from <a href="https://registry.opendata.aws/sentinel-2/">AWS S3</a>.
+  </p>
+  <p>
+    This website is Open-Source, <a href="https://github.com/couetilc/couetil.com">check it out on GitHub</a>.
+  </p>
+</section>
+{{ end }}
