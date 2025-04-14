@@ -3,10 +3,6 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
-- template partials for header, and meta tags, font preloads, the server time check, favicons, 
-- fix home page template, needs to use partials
-- is there any way to have go:embed flatten the filesystem for "templatesFS" and "staticFS"? So I don't have to prefix paths with "templates/" and "static/" in go code?
-    - maybe instead of fs.FS object, it could be simple path of files, I think that's a go:embed option.
 - possible to include (1) time to serve request and (2) time since server boot in response?
 - Dockerize this, so I can deploy an image on AWS Lambda. Resume will be a distinct build stage I pull the final files from.
 - get resume page working
@@ -29,6 +25,17 @@ regular template can be invoked by an HTTP handler specified in the
 document skeletons that should expose blocks that can be overriden by a regular
 template and are expected to be used once. Partials do not layout an HTML
 document and may be re-used.
+
+### Template Context
+
+Each template receives a context object. Currently, the context shape is
+
+```go
+type TemplateContext struct {
+	time.Time
+	*url.URL
+}
+```
 
 ### Available Layouts
 
