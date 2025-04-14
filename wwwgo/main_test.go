@@ -37,6 +37,18 @@ func init() {
 			matchHeader: "text/html",
 			matchBody: "index.js",
 		},
+		{
+			route: "/portfolio",
+			matchStatus: http.StatusOK,
+			matchHeader: "text/html",
+			matchBody: "Portfolio",
+		},
+		{
+			route: "/about",
+			matchStatus: http.StatusOK,
+			matchHeader: "text/html",
+			matchBody: "About",
+		},
 	}
 }
 
