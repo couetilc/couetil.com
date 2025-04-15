@@ -3,11 +3,13 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
-- possible to include (1) time to serve request and (2) time since server boot in response?
 - Dockerize this, so I can deploy an image on AWS Lambda. Resume will be a distinct build stage I pull the final files from.
 - get resume page working
+- combine all the CSS into one file?
 - make a better 404 page
 - make sure Go server is compressing all web pages and assets. It may be a `Transport` setting.
+- can I create hashed asset files? What would look like? Would need a helper function for templates that refer to an internal map of assets
+- instead of listing documentation here like in available layouts, and template context, is there a Go documentation convention, like godocs, or python `"""` docstrings, that I can use instead? And build a docs folder programmatically?
 
 
 NOTE
