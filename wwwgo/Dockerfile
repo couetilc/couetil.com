@@ -2,7 +2,9 @@ FROM golang:1.24 AS build
 
 WORKDIR /www
 
-COPY go.mod ./
+COPY go.mod go.sum ./
+
+RUN go mod download
 
 COPY static ./static/
 COPY templates ./templates/
@@ -14,4 +16,4 @@ FROM public.ecr.aws/lambda/provided:al2023
 
 COPY --from=build /www/main ./main
 
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["./main", "--lambda"]

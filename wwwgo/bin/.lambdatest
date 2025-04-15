@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+set -e -o pipefail
+
+trap 'exit_code=$?; on_exit $exit_code' EXIT
+
+on_exit() {
+	code="$1"
+	if [ "$code" -eq 0 ]; then
+		echo Test Passed
+	else
+		echo Test Failed
+	fi
+	exit "$code"
+}
+
+endpoint="http://localhost:9000/2015-03-31/functions/function/invocations"
+
+payload_domain=www.couetil.com
+payload_protocol=HTTP/1.1
+payload_sourceip=192.0.2.1
+payload_useragent=agent
+payload_headers=
+payload_cookies=
+payload_querystring=
+payload_method=GET
+payload_path=/
+payload_body=
+
+payload() {
+	printf '
+{
+  "version": "2.0",
+  "routeKey": "$default",
+  "rawPath": "%s",
+  "rawQueryString": "%s",
+  "cookies": [%s],
+  "headers": {%s},
+  "queryStringParameters": {},
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "authentication": {
+      "clientCert": {
+        "clientCertPem": "CERT_CONTENT",
+        "subjectDN": "www.example.com",
+        "issuerDN": "Example issuer",
+        "serialNumber": "a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1",
+        "validity": {
+          "notBefore": "May 28 12:30:02 2019 GMT",
+          "notAfter": "Aug  5 09:36:04 2021 GMT"
+        }
+      }
+    },
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "claim1": "value1",
+          "claim2": "value2"
+        },
+        "scopes": [
+          "scope1",
+          "scope2"
+        ]
+      }
+    },
+    "domainName": "%s",
+    "domainPrefix": "id",
+    "http": {
+      "method": "%s",
+      "path": "%s",
+      "protocol": "%s",
+      "sourceIp": "%s",
+      "userAgent": "%s"
+    },
+    "requestId": "id",
+    "routeKey": "$default",
+    "stage": "$default",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "body": "%s",
+  "pathParameters": {},
+  "isBase64Encoded": false,
+  "stageVariables": {
+    "stageVariable1": "value1",
+    "stageVariable2": "value2"
+  }
+}
+	' "$payload_path" "$payload_querystring" "$payload_cookies" "$payload_headers" "$payload_domain" "$payload_method" "$payload_path" "$payload_protocol" "$payload_sourceip" "$payload_useragent" "$payload_body"
+}
+
+match_body() {
+	pattern="$1"
+	echo "Case: $endpoint (match: $pattern)"
+	trap "$(printf "%s" \
+	 'echo "Failed payload: $(payload)";' \
+	 'echo "Failed Response:";' \
+	 'echo "$(echo "$stdout" | jq)";' \
+	 'echo'
+	)" ERR
+	stdout=$(curl -s "$endpoint" -d "$(payload)")
+	echo $stdout jq .body | grep -q "$pattern"
+}
+
+payload_path="/"
+match_body "<title>Yo.</title>"
+
+payload_path="/about/"
+match_body "<title>About</title>"
+
+payload_path="/portfolio/"
+match_body "<title>Portfolio</title>"
+
+payload_path="/404"
+match_body "404"

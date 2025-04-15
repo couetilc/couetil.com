@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+docker run \
+ -d \
+ -p 9000:8080 \
+ --entrypoint /usr/local/bin/aws-lambda-rie \
+ --platform linux/amd64 \
+ "$docker_image" \
+ ./main

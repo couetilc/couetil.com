@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"os"
 	"net/http"
 	"html/template"
@@ -9,23 +9,30 @@ import (
 	"time"
 	"net/url"
 	"strings"
+	"log/slog"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 type Server struct {
 	http.Server
-	http.ServeMux
 }
 
 func NewServer() *Server {
-	s := new(Server)
-	s.Server.Addr = ":8080"
-	s.Server.Handler = &s.ServeMux
 	nt := NewNestedTemplate(templatesFS)
-	s.Handle("/{$}", nt.NewHandler("page_home.tmpl", http.StatusOK))
-	s.Handle("/about/{$}", nt.NewHandler("page_about.tmpl", http.StatusOK))
-	s.Handle("/portfolio/{$}", nt.NewHandler("page_portfolio.tmpl", http.StatusOK))
-	s.Handle("/static/", http.FileServerFS(staticFS))
-	s.Handle("/", nt.NewHandler("page_404.tmpl", http.StatusNotFound))
+
+	mux := new(http.ServeMux)
+	mux.Handle("/{$}", nt.NewHandler("page_home.tmpl", http.StatusOK))
+	mux.Handle("/about/{$}", nt.NewHandler("page_about.tmpl", http.StatusOK))
+	mux.Handle("/portfolio/{$}", nt.NewHandler("page_portfolio.tmpl", http.StatusOK))
+	mux.Handle("/static/", http.FileServerFS(staticFS))
+	mux.Handle("/", nt.NewHandler("page_404.tmpl", http.StatusNotFound))
+
+	s := new(Server)
+	s.Addr = ":8080"
+	s.Handler = &RequestLogger{mux}
+
 	return s
 }
 
@@ -79,6 +86,22 @@ func (c *TemplateContext) UpTime() string {
 	return time.Now().Sub(bootTime).String()
 }
 
+type RequestLogger struct {
+	handler http.Handler
+}
+
+func (rl *RequestLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	slog.Info(
+		"http_request",
+		"url",
+		r.URL,
+		"method",
+		r.Method,
+	)
+
+	rl.handler.ServeHTTP(w, r)
+}
+
 //go:embed templates
 var templatesFS embed.FS
 //go:embed static
@@ -87,11 +110,21 @@ var bootTime time.Time
 
 func init() {
 	bootTime = time.Now()
+	slog.Info("boot", "time", bootTime.UTC().Format(time.UnixDate))
 }
 
 func main() {
-	if err := NewServer().ListenAndServe(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+	isLambda := flag.Bool("lambda", false, "if true, starts the lambda compatibility layer")
+	flag.Parse()
+
+	slog.Info("config", "is_lambda", *isLambda)
+
+	if *isLambda {
+		lambda.Start(httpadapter.NewV2(NewServer().Handler).ProxyWithContext)
+	} else {
+		if err := NewServer().ListenAndServe(); err != nil {
+			slog.Error("exit", "error", err)
+			os.Exit(1)
+		}
 	}
 }

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -e
+
+container_id="$(docker ps --filter ancestor="$docker_image" --format "{{.ID}}")"
+
+if [ -n "$container_id" ]; then
+	echo
+	echo "Warning: container is already running"
+	echo
+	docker ps --filter ancestor="$docker_image"
+else
+	docker run \
+	 -d \
+	 -p 9000:8080 \
+	 --entrypoint /usr/local/bin/aws-lambda-rie \
+	 --platform linux/amd64 \
+	 "$docker_image" \
+	 ./main --lambda
+fi

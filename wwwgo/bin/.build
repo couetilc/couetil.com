@@ -5,5 +5,5 @@ set -x
 docker buildx build \
  --platform linux/amd64 \
  --provenance=false \
- -t couetil.com:www \
+ -t "$docker_image" \
  "$rootdir"
