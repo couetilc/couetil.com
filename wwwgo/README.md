@@ -11,7 +11,6 @@ TODO
 - can I create hashed asset files? What would look like? Would need a helper function for templates that refer to an internal map of assets
 - instead of listing documentation here like in available layouts, and template context, is there a Go documentation convention, like godocs, or python `"""` docstrings, that I can use instead? And build a docs folder programmatically?
 
-
 NOTE
 - checkout `http/httptrace`, `http/httputil`, and `http/pprof` for robust web server. See what exactly they are used for.
 
