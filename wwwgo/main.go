@@ -91,6 +91,8 @@ type RequestLogger struct {
 }
 
 func (rl *RequestLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	rl.handler.ServeHTTP(w, r)
+
 	slog.Info(
 		"http_request",
 		"url",
@@ -98,8 +100,6 @@ func (rl *RequestLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"method",
 		r.Method,
 	)
-
-	rl.handler.ServeHTTP(w, r)
 }
 
 //go:embed templates
