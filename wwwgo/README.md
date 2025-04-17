@@ -3,6 +3,7 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
+- may want to replace my go shim with https://github.com/awslabs/aws-lambda-web-adapter
 - Deploy to AWS
 - get resume page working
     - will be a distinct build stage I pull the .pdf, .html, and .css from
