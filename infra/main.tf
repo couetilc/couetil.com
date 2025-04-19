@@ -22,14 +22,15 @@ terraform {
 
 provider "aws" {
 	region = "us-east-1"
+	default_tags {
+		tags = {
+			service = "www.couetil.com"
+		}
+	}
 }
 
 resource "aws_s3_bucket" "tf_couetil_com" {
 	bucket = "tf.couetil.com"
-	tags = {
-		Domain = "couetil.com"
-		Service = "tf.couetil.com"
-	}
 }
 
 resource "aws_s3_bucket_versioning" "tf_couetil_com" {
@@ -44,6 +45,7 @@ resource "aws_ecr_repository" "www" {
 	image_tag_mutability = "MUTABLE"
 }
 
+# TODO: does this already exist as a default somewhere in AWS IAM? Or can I switch this to a data block, like below for apigateway assume role? What is the difference between data and resource for iam roles?
 resource "aws_iam_role" "lambda_exec" {
 	name = "www.couetil.com-exec-role"
 	assume_role_policy = <<EOF
@@ -110,6 +112,10 @@ resource "aws_apigatewayv2_stage" "www" {
   api_id      = aws_apigatewayv2_api.www.id
   name        = "$default"
   auto_deploy = true
+  access_log_settings {
+	destination_arn = aws_cloudwatch_log_group.www_apigateway.arn
+	format = "$context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] \"$context.httpMethod $context.resourcePath $context.protocol\" $context.status $context.responseLength $context.requestId"
+  }
 }
 
 output "www_invoke_url" {
@@ -128,4 +134,123 @@ data "aws_secretsmanager_secret_version" "account_id" {
 
 locals {
   aws_account_id = data.aws_secretsmanager_secret_version.account_id.secret_string
+  www_origin_id = "WwwApiGatewayOrigin"
+}
+
+
+resource "aws_cloudfront_distribution" "www" {
+  enabled             = true
+  default_root_object = ""   # no index document; we pass through every request
+  is_ipv6_enabled = true
+  http_version = "http2"
+
+  origin {
+    domain_name = replace( aws_apigatewayv2_stage.www.invoke_url, "/^https?://|/$/", "")
+    origin_id   = local.www_origin_id
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_read_timeout    = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+  
+  # default_cache_behavior {
+  #   target_origin_id       = "APIGatewayOrigin"
+  #   viewer_protocol_policy = "redirect-to-https"
+  #   allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+  #   cached_methods         = ["GET", "HEAD"]
+  #   compress               = true
+  #
+  #   # forward everything your Lambda/API needs
+  #   forwarded_values {
+  #     query_string = true
+  #     headers      = ["Authorization", "Content-Type", "Accept", "Origin"]
+  #     cookies {
+  #       forward = "all"
+  #     }
+  #   }
+  # }
+
+  # NOTE: for future updates, the CachingOptimized
+  # (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+  # seems like a good cache policy, it minimizes cache key size to increase
+  # cache misses and I think it also compresses response bodies.
+  # Basically, no cookies or headers are included in the cache key. So this works well for my simple static site. I will have to update it if it gets more complex in the future.
+  default_cache_behavior {
+	# note: cache_policy_id, even if for custom, is how cache policies are set now (don't use forwarded_values terraform property)
+	cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # this is "CachingDisabled" managed cache policy
+	allowed_methods = ["GET", "HEAD", "OPTIONS"]
+	target_origin_id = local.www_origin_id
+	cached_methods = ["GET", "HEAD"]
+	viewer_protocol_policy = "redirect-to-https"
+  }
+  
+  # Edge locations: USA, Mexico, Canada, Europe, Israel, Turkey
+  price_class = "PriceClass_100"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    # Use the default, or swap in an ACM cert for your custom domain
+    cloudfront_default_certificate = true
+  }
+}
+
+resource "aws_api_gateway_account" "www" {
+	cloudwatch_role_arn = aws_iam_role.apigateway_cloudwatch.arn
+}
+
+data "aws_iam_policy_document" "apigateway_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "cloudwatch" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch" {
+  name   = "default"
+  role   = aws_iam_role.apigateway_cloudwatch.id
+  policy = data.aws_iam_policy_document.cloudwatch.json
+}
+
+resource "aws_iam_role" "apigateway_cloudwatch" {
+  name               = "api_gateway_cloudwatch_global"
+  assume_role_policy = data.aws_iam_policy_document.apigateway_assume_role.json
+}
+
+resource "aws_cloudwatch_log_group" "www_apigateway" {
+  name              = "/aws/http-api/www_apigateway/access-logs"
+  retention_in_days = 14
 }

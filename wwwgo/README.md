@@ -3,12 +3,18 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
-- may want to replace my go shim with https://github.com/awslabs/aws-lambda-web-adapter
-- Deploy to AWS
+- any public ingress into my software resources MUST be from Cloudfront. I need to lockdown my API gateway from public access. Then I need to make sure APIG and Lambda in same VPC and region and Availability Zone?
+    - I'll have to disable the default_endpoint setting once I have the connection to cloudfront going, I guess.
+    - I think I'll have to create a VPC link to the lambda function, and then the cloudfront distribution.
+- Hashing the assets may require some "build tool" e.g. `go build -a -toolexec "yourtool someargs"`
+    - see https://www.youtube.com/watch?v=5l-W7vPSbuc
+    - maybe `go generate`
+- Remember, have cloudfront compress everything. Normal responses from Go server and API gateway.
+- Get cache headers working and set up API Gateway. Etags or Cache TTL? Would want to do it by adding cache strings to assets
 - get resume page working
     - will be a distinct build stage I pull the .pdf, .html, and .css from
 - combine all the CSS into one file?
-- make a better 404 page
+- make a better 404 page. I think I have black text on black background right now
 - make sure Go server is compressing all web pages and assets. It may be a `Transport` setting.
 - can I create hashed asset files? What would look like? Would need a helper function for templates that refer to an internal map of assets
 - instead of listing documentation here like in available layouts, and template context, is there a Go documentation convention, like godocs, or python `"""` docstrings, that I can use instead? And build a docs folder programmatically?
@@ -20,6 +26,10 @@ TODO
     - Apparently there can be a lot of CPU throttling for smaller lambda functions
         - run a benchmark against a matrix of deployed lambda after I run my above tests. If above tests do not use memory above 128MB (smallest lambda size) it won't matter.
 - Set up monitoring and billing dashboards using service tags.
+- establish some way to monitor cache hits, to see if I need origin shield.
+- Go through "Root User best practices for AWS account" to secure login https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html
+- May want to switch DNS name servers for couetil.com to Route53
+- my origin protocol policy is HTTP only right now. That's fine, because its static files, but is all traffic from cloudfront->api_gateway->lambda going through VPC? It needs to be internet->cloudfront->[vpc|api_gateway->lambda]
 
 NOTE
 - checkout `http/httptrace`, `http/httputil`, and `http/pprof` for robust web server. See what exactly they are used for.
