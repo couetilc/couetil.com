@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"net/http"
 	"html/template"
@@ -10,9 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"log/slog"
-
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 type Server struct {
@@ -114,17 +110,8 @@ func init() {
 }
 
 func main() {
-	isLambda := flag.Bool("lambda", false, "if true, starts the lambda compatibility layer")
-	flag.Parse()
-
-	slog.Info("config", "is_lambda", *isLambda)
-
-	if *isLambda {
-		lambda.Start(httpadapter.NewV2(NewServer().Handler).ProxyWithContext)
-	} else {
-		if err := NewServer().ListenAndServe(); err != nil {
-			slog.Error("exit", "error", err)
-			os.Exit(1)
-		}
+	if err := NewServer().ListenAndServe(); err != nil {
+		slog.Error("exit", "error", err)
+		os.Exit(1)
 	}
 }
