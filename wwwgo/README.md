@@ -3,12 +3,19 @@
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
 TODO
-- any public ingress into my software resources MUST be from Cloudfront. I need to lockdown my API gateway from public access. Then I need to make sure APIG and Lambda in same VPC and region and Availability Zone?
-    - I'll have to disable the default_endpoint setting once I have the connection to cloudfront going, I guess.
-    - I think I'll have to create a VPC link to the lambda function, and then the cloudfront distribution.
+- Do I need something like CloudInit for the AWS Linux VM image? to do system configuration? For example, to harden SSH using this as guide https://infosec.mozilla.org/guidelines/openssh?
 - Hashing the assets may require some "build tool" e.g. `go build -a -toolexec "yourtool someargs"`
+    - I want to use FNV-1a to hash the file. Fast, randomly distributed, unlikely to collide.
     - see https://www.youtube.com/watch?v=5l-W7vPSbuc
     - maybe `go generate`
+    - I think the best approach, is just to load into binary with go:embed, and then hash into a map on startup, insert hashed filenames into HTML, and then when requests for assets come through, match the hash string to the embedded asset. This way, go:embed is fine and no need for odd build tools or plugins, but I will need to hack the fileserver to somehow match hashed filenames to the asset. I guess I could do that simply by stripping the hashkey from the URL. Client's and upstream CDNs will use the hash to cache, and I will use the filename to serve. Actually, does it have to be in the URL then should it just be a Header? I think caching by URL is more universal and supported by web browsers however.
+	- e.g. [go:embed] static/myimage.jpeg -> [internally produce hash and serve] static/myimage-12345.jpeg -> [request comes in for] static/myimage-12345.jpeg -> [before fileserver I strip the hash] static/myimage.jpeg -> [serve the image data]
+	- URLs will always cause a cache-hit to miss, and the browser to check for new resources, that's a thing.
+	- If I get a hashkey from a client, and its not in my map, it must be a reference to an old resource somehow. I need to 404 that hashkey instead of stripping it and serving the new asset. So there will need to be a hash validation step before the strip and serve step.
+	- Need to explore what cache-headers I need.
+	    - ETags are a must. Need to explore more. They are for when content has expired, and are a cheap method of revalidation from the server for the browser. I will need to implement proper server 304 Not Modified responses for these type of asset requests from a CDN or browser (e.g. If-Match or If-None-Match)
+	    - Those ETags will be primarily for my HTML pages.
+	- Hashed static content will use immutable Cache-Control directive. It doesn't work on every browser, so I can also set max-age to be very long, like a year.
 - Remember, have cloudfront compress everything. Normal responses from Go server and API gateway.
 - Get cache headers working and set up API Gateway. Etags or Cache TTL? Would want to do it by adding cache strings to assets
 - get resume page working
@@ -30,6 +37,11 @@ TODO
 - Go through "Root User best practices for AWS account" to secure login https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html
 - May want to switch DNS name servers for couetil.com to Route53
 - my origin protocol policy is HTTP only right now. That's fine, because its static files, but is all traffic from cloudfront->api_gateway->lambda going through VPC? It needs to be internet->cloudfront->[vpc|api_gateway->lambda]
+- It would be fun to publish a benchmark of these hash functions on different hardware, with different filetypes (code vs images vs english language), and different algorithms. Would be a nice reference for Go programs. And a good first blog post for my blog.
+    - Use this stack overflow answer as a good reference for how to display the results of the benchmark https://softwareengineering.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed
+    - Just use the hash functions from the standard library: [hash] adler32, crc32, crc64, fnv, maphash, [crypto] 
+    - split out results between hash focused and crypto focused. Compare memory usage not just speed. Have single threaded vs multi-threaded too.
+    - use AWS spot instances in order to reduce the price of running these benchmarks. Basically, if a new hash version comes out, schedule a benchmark run, and wait for spot instances to get cheap. (need to make sure either EBS instances are deleted and removed, or not used at all. Better if not used so test runs in memory? IDK)
 
 NOTE
 - checkout `http/httptrace`, `http/httputil`, and `http/pprof` for robust web server. See what exactly they are used for.
@@ -41,6 +53,7 @@ Install:
 - `direnv`
 - Docker
 - Go
+- `terraform`
 
 See `bin/` for commands.
 
