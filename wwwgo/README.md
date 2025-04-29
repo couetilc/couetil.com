@@ -2,6 +2,23 @@
 
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
+NEW ARTCHITECTURE
+- OK, just AWS Cloudfront, and cheapest EC2, in default public subnet.
+- Security will be non-default SSH port, non-default HTTP port, and restrict SSH access to USA IPs, and WireGuard tunnel needed for any SSH access (but how to include that in security group rules?), SSH access only from wireguard local ip address, and restrict access to HTTP to cloudfront only. (also, should I lock down outgoing traffic? it kind of makes sense but what about downloading software updates and certificate updates? I guess just allow access to those repositories.)
+- use cloud init to define EC2 base image, including wireguard private key.
+- should I just log to filesystem? rather than s3? and use a cli based log search over SSH? and what about alerting? and I'll need a log of failed network requests on the instance. I need to get logs for all running processes basically.
+- network logging with iptables. Need to learn to configure iptables.
+- Use PyInfra with Cloud-Init, no ansible? Cloud-init will configure the VM from start, and PyInfra will make sure configuration drift can be fixed or changed on the fly. So I can CLoud-Init hte VM to make sure all the dependencies are available and users are set up, then run PyInfra for a final baked config based on those dependencies and users.. For example, CLoud-init can set up the SSH keys and then PyInfra can use those keys to communicate after spin-up.
+
+VM network traffic flow
+```
+WireGuard --> SSH
+Cloudfront --> HAProxy
+HAProxy --> Www
+```
+
+can put wireguard IP addresses for VPN clients (laptop, vm) in .envrc in a project-specific way. then in ssh config give them a name. wireguard configs will live in the repo.
+
 TODO
 - Do I need something like CloudInit for the AWS Linux VM image? to do system configuration? For example, to harden SSH using this as guide https://infosec.mozilla.org/guidelines/openssh?
 - Hashing the assets may require some "build tool" e.g. `go build -a -toolexec "yourtool someargs"`

@@ -6,6 +6,7 @@
 # 5. DNS records?
 # 6. I need to restrict outgoing internet traffic from the EC2 instance to only it's runtime dependencies. Builds of a container image to be loaded for a deploys will have already accessed everything it needs from the internet.
 # 7. I want some type of CI/CD system and I want to see what AWS offers. 
+# 8. Set up logging and make sure sometime type of monitoring is enabled on the ec2 instance.
 
 terraform {
 	required_providers {
@@ -73,7 +74,7 @@ resource "aws_security_group" "www" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
   security_group_id = aws_security_group.www.id
-  cidr_ipv4         = local.vpc.cidr_block
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 22
   ip_protocol       = "tcp"
   to_port           = 22
@@ -97,6 +98,16 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 resource "aws_ecs_cluster" "www" {
   name = "www"
+}
+
+resource "aws_ecs_cluster_capacity_providers" "www" {
+  cluster_name = aws_ecs_cluster.www.name
+  capacity_providers = [aws_ecs_capacity_provider.www.name]
+
+  default_capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.www.name
+    weight            = 1
+  }
 }
 
 // This looks off. "ecs_assume_role" in title and "ec2.amazonaws.com" in identifiers?
@@ -129,26 +140,33 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 }
 
 data "aws_ssm_parameter" "www_ami" {
-  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2023/arm64/recommended/image_id"
 }
 
-resource "aws_instance" "www" {
-  ami                         = data.aws_ssm_parameter.www_ami.value
-  instance_type               = "t3.micro"
-  subnet_id                   = local.subnet.id
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.www.id]
-  iam_instance_profile        = aws_iam_instance_profile.ecs_instance_profile.name
-
-  user_data = <<-EOF
-    #!/bin/bash
-    echo "ECS_CLUSTER=${aws_ecs_cluster.www.name}" >> /etc/ecs/ecs.config
-EOF
-
-  tags = {
-    Name = "ecs-host"
-  }
+resource "aws_key_pair" "root" {
+  key_name = "root"
+  public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBqkQhojLRy/U06XCUT2yuAiZjMSKKCkmcC/JS6+ea53"
 }
+
+# resource "aws_instance" "www" {
+#   ami                         = data.aws_ssm_parameter.www_ami.value
+#   instance_type               = "t4g.nano"
+#   subnet_id                   = local.subnet.id
+#   associate_public_ip_address = true
+#   vpc_security_group_ids      = [aws_security_group.www.id]
+#   iam_instance_profile        = aws_iam_instance_profile.ecs_instance_profile.name
+#   monitoring		      = true
+#   key_name		      = aws_key_pair.root.key_name
+#
+#   user_data = <<-EOF
+#     #!/bin/bash
+#     echo "ECS_CLUSTER=${aws_ecs_cluster.www.name}" >> /etc/ecs/ecs.config
+# EOF
+#
+#   tags = {
+#     Name = "www"
+#   }
+# }
 
 resource "aws_iam_role_policy_attachment" "ecr_read" {
   role       = aws_iam_role.ecs_instance_role.name
@@ -162,11 +180,21 @@ resource "aws_ecs_task_definition" "www" {
   cpu                      = "256" // eventually will make this the VM's cpu and memory
   memory                   = "512"
 
+  execution_role_arn = aws_iam_role.ecs_task_execution.arn
+
   container_definitions = jsonencode([{
     name         = "www"
     image        = "${aws_ecr_repository.www.repository_url}:latest"
     essential    = true
     portMappings = [{ containerPort = 80, hostPort = 80 }]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+	awslogs-group = aws_cloudwatch_log_group.ecs_www.name
+	awslogs-region = "us-east-1"
+	awslogs-stream-prefix = "ecs"
+      }
+    }
   }])
 }
 
@@ -175,11 +203,114 @@ resource "aws_ecs_service" "www" {
   cluster         = aws_ecs_cluster.www.id
   task_definition = aws_ecs_task_definition.www.arn
   desired_count   = 1
-  launch_type     = "EC2"
 
   depends_on = [
-    aws_instance.www
+    aws_autoscaling_group.www
   ]
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.www.name
+    weight = 1
+  }
+}
+
+resource "aws_launch_template" "www" {
+  name_prefix   = "ecs-"
+  image_id      = data.aws_ssm_parameter.www_ami.value
+  instance_type = "t4g.nano"
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ecs_instance_profile.name
+  }
+
+  user_data = <<-EOF
+    #!/bin/bash
+    echo "ECS_CLUSTER=${aws_ecs_cluster.www.name}" >> /etc/ecs/ecs.config
+  EOF
+
+  network_interfaces {
+    associate_public_ip_address = true
+    subnet_id                   = local.subnet.id
+    security_groups             = [aws_security_group.www.id]
+  }
+
+  monitoring {
+    enabled = true
+  }
+}
+
+resource "aws_autoscaling_group" "www" {
+  name                      = "www"
+  min_size                  = 1
+  max_size                  = 1
+  desired_capacity          = 1
+  vpc_zone_identifier       = local.subnet.id
+
+  launch_template {
+    id      = aws_launch_template.www.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "www"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = true
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "www" {
+  name = "www"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.www.arn
+
+    managed_scaling {
+      status            = "ENABLED"
+      target_capacity   = 100
+      minimum_scaling_step_size = 1
+      maximum_scaling_step_size = 1000
+    }
+
+    # Protect running tasks during ASG scale-in
+    managed_termination_protection = "ENABLED"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ecs_www" {
+  name              = "/ecs/www"
+  retention_in_days = 14
+}
+
+data "aws_iam_policy_document" "ecs_task_exec_assume" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+
+resource "aws_iam_role" "ecs_task_execution" {
+  name               = "ecsTaskExecutionRole"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_exec_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_exec_policy" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_instance" "www" {
+  instance_id = one(aws_autoscaling_group.www.instances).instance_id
 }
 
 resource "aws_cloudfront_distribution" "www" {
@@ -187,7 +318,7 @@ resource "aws_cloudfront_distribution" "www" {
   default_root_object = ""
 
   origin {
-    domain_name = aws_instance.www.public_dns
+    domain_name = data.aws_instance.www
     origin_id   = "www"
 
     custom_origin_config {
@@ -224,3 +355,5 @@ output "cloudfront_domain_name" {
   description = "CloudFront URL for your service"
   value       = aws_cloudfront_distribution.www.domain_name
 }
+
+
