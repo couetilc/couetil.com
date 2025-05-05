@@ -8,6 +8,24 @@
 # 7. I want some type of CI/CD system and I want to see what AWS offers. 
 # 8. Set up logging and make sure sometime type of monitoring is enabled on the ec2 instance.
 
+# OK VM Image Stuff:
+# - cloud init, the user_data is not working for whatever reason.
+#    - 
+# - need to locked down SSH. No password access, only key access. (so modify system sshd_config)
+# - need to set up a Docker credential store on boot: `sudo dnf install -y amazon-ecr-credential-helper` see https://github.com/awslabs/amazon-ecr-credential-helper
+# - need to have docker installed, and other dependencies.
+# - need to have it pull the image from my ECR repo? Or already have the image on file system somehow?
+
+# cloud init:
+# what needs to happen?
+# - change user to something else (not "ec2-user")
+# - configure iptables (same as aws security group. Also to keep a log of all network requests.)
+# - what other logging can I configure? application i guess? Other kernel logs? log rotation.
+# - install application dependencies? I guess not if docker? or I just deploy the binary? Nothing else on the server. or I just run the container to get isolation, no overhead on linux. And every cloud provider optimizes for containers.
+# - what about security updates? for system programs? and the OS itself? How to keep updated? This might be where AWS Systems Manager comes in. There are AMI images where it is included. Like 
+# - multipart mime type of cloud-config is awesome. great idea.
+# - I can use hashicorp packer tool to make this image have everything at boot. Same syntax as terraform I believe. And will include the latest www go binary. So I rebuild VM on every release.
+
 terraform {
 	required_providers {
 		aws = {
@@ -97,27 +115,8 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 }
 
 data "aws_ssm_parameter" "www_ami" {
-  # name = "/aws/service/ecs/optimized-ami/amazon-linux-2023/arm64/recommended/image_id"
-  # name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
-
-# // Apparently this is the ami name format for awmazon linux:
-# // > al2023-[ami || ami-minimal]-2023.0.[release build date].[build number]-kernel-[version number]-[arm64 || x86_64]
-# // source: https://docs.aws.amazon.com/linux/al2023/ug/ec2.html
-# data "aws_ami" "al2023-arm64" {
-#   most_recent = true
-#   owners = ["amazon"]
-#   filter {
-#     name = "architecture"
-#     values = ["arm64"]
-#   }
-#   # filter {
-#   #   name = "name"
-#   #   values = ["al2023-ami-2023.0.*.*-kernel-*-arm64"]
-#   # }
-# }
-#
 
 resource "aws_key_pair" "root" {
   key_name = "root"
