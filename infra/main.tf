@@ -1,11 +1,6 @@
-# 2. Create EC2 instance in public subnet.
-# 3. Attach security group
 # 4 - switch ssh to a different port (btw is it possible to store SSH config in 1password? Or I guess I would use AWS secret manager and keep it project specific, activate/accessed by my rootkey in 1pass?)
-# 4. - access only to SSH port, and from Cloudfront to the port of the go server. I can always SSH forward the app to access it remotely for dev work without allowing public access.
-# 4. Create Cloudfront Distribution
 # 5. DNS records?
 # 6. I need to restrict outgoing internet traffic from the EC2 instance to only it's runtime dependencies. Builds of a container image to be loaded for a deploys will have already accessed everything it needs from the internet.
-# 7. I want some type of CI/CD system and I want to see what AWS offers. 
 # 8. Set up logging and make sure sometime type of monitoring is enabled on the ec2 instance.
 
 # OK VM Image Stuff:
@@ -20,11 +15,52 @@
 # what needs to happen?
 # - change user to something else (not "ec2-user")
 # - configure iptables (same as aws security group. Also to keep a log of all network requests.)
+# - configure the go app as a systemd service (so I can use socket activation for rolling deploys. need to udnerstand socket activation better)
 # - what other logging can I configure? application i guess? Other kernel logs? log rotation.
 # - install application dependencies? I guess not if docker? or I just deploy the binary? Nothing else on the server. or I just run the container to get isolation, no overhead on linux. And every cloud provider optimizes for containers.
 # - what about security updates? for system programs? and the OS itself? How to keep updated? This might be where AWS Systems Manager comes in. There are AMI images where it is included. Like 
 # - multipart mime type of cloud-config is awesome. great idea.
 # - I can use hashicorp packer tool to make this image have everything at boot. Same syntax as terraform I believe. And will include the latest www go binary. So I rebuild VM on every release.
+
+# Rolling Deploys:
+# - the best option for rolling deploys seems to be socket activation with
+# systemd. I deploy the new binary, overwriting the old binary, while the old
+# process is in memory, then `systemctl restart [service_name]` and the new
+# process will be loading, traffic switch to it, and the old process will be
+# killed. Not sure about whether in-flight requests will be gracefully handled.
+# The only problem with this is I have to add a go dependency to accept the
+# systemd socket, rather than the default net.Listen socket. But HAProxy comes
+# included with systemd socket activation, so I may just use it for the rolling
+# deploys, then when I need to update haproxy itself, then socket activation
+# comes in handy. HAProxy also has a graceful restart option as part of
+# startup, where it will inherit connections from the old process, so no need
+# for systemd.
+# - The other option, which may be simpler/typical is using iptables for a
+# in-kernel NAT setup. There are "prerouting" and "redirect" directives that
+# let you swap requests to another port. Then can send a cancel signal to old
+# process, and let it gracefully shutdown.
+# - I don't need HAProxy because I don't want to do SSL termination on the
+# instance, I'll let AWS take care of that with their default public DNS for
+# EC2. And I don't have multiple services running under the same domain name.
+# - I can test my rolling deploys by running go-wrk (benchmark tool), starting
+# the deploy, and seeing the number of errors.
+# - once this works, what about rollback?
+# - OK, so I think: HAProxy (with systemd socket activation for rolling
+# deploys) -> go router (with haproxy config updates for rolling deploys)
+# BUTTTTTTTTTT I think trying out iptables NAT no haproxy is best to try first.
+#
+# OK so I will want to:
+# - create my own iptables chain
+# - add rule that forwards from port 80 to the server port
+# ```
+# iptables -t nat -N WWW
+# iptables -t nat -I PREROUTING -p tcp --dport 80 -j WWW
+# iptables -t nat -A WWW -p tcp -j REDIRECT --to-ports 9001
+# ```
+# - And then toggle by
+# ```
+# iptables -t nat -R WWW 1 -p tcp -j REDIRECT --to-ports 9002
+# ```
 
 terraform {
 	required_providers {
@@ -147,7 +183,7 @@ resource "aws_cloudfront_distribution" "www" {
   default_root_object = ""
 
   origin {
-    domain_name = aws_instance.www.public_dns // TODO: this will not work. It needs to be a domain name. Maybe www.www.couetil.com or *.www.couetil.com
+    domain_name = aws_instance.www.public_dns
     origin_id   = "www"
 
     custom_origin_config {

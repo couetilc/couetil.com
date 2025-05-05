@@ -9,13 +9,14 @@ import (
 	"net/url"
 	"strings"
 	"log/slog"
+	"flag"
 )
 
 type Server struct {
 	http.Server
 }
 
-func NewServer() *Server {
+func NewServer(addr *string) *Server {
 	nt := NewNestedTemplate(templatesFS)
 
 	mux := new(http.ServeMux)
@@ -26,7 +27,7 @@ func NewServer() *Server {
 	mux.Handle("/", nt.NewHandler("page_404.tmpl", http.StatusNotFound))
 
 	s := new(Server)
-	s.Addr = ":8080"
+	s.Addr = *addr
 	s.Handler = &RequestLogger{mux}
 
 	return s
@@ -110,7 +111,10 @@ func init() {
 }
 
 func main() {
-	if err := NewServer().ListenAndServe(); err != nil {
+	addr := flag.String("addr", ":http", "TCP address for server to listen on. See net.Dial for address format.")
+	flag.Parse()
+
+	if err := NewServer(addr).ListenAndServe(); err != nil {
 		slog.Error("exit", "error", err)
 		os.Exit(1)
 	}
