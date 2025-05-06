@@ -60,6 +60,8 @@
 # - And then toggle by
 # ```
 # iptables -t nat -R WWW 1 -p tcp -j REDIRECT --to-ports 9002
+# conntrack -F # flushes connection table so TCP clients are forced to make a new connection, which will now be routed to the new process.
+# sudo conntrack -D -p tcp --dport 80 # I think I can use this to only flush the incoming HTTP connections, haven't tested it.
 # ```
 
 terraform {
