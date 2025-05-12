@@ -2,6 +2,14 @@
 
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
+SYSTEMD SETUP
+- Go through these
+    - https://mgdm.net/weblog/systemd/
+    - https://mgdm.net/weblog/systemd-socket-activation/
+    - great stuff in here, like systemd options for security. (e.g. run `sudo systemd-analyze security www.service --no-pager`), making sure to create a user for the service with limited privileges dynamically that is removed when the service stops, etc.)
+- this article explains graceful shutdown https://vincent.bernat.ch/en/blog/2018-systemd-golang-socket-activation and zero-downtime deploy
+- this has an example go server with zero downtime, graceful shutdowns, and systemd stuff, more complex and full than others https://gist.github.com/rsms/b70b4c7fe3b25e17b4b1f6af8b007c14
+
 NEW ARTCHITECTURE
 - OK, just AWS Cloudfront, and cheapest EC2, in default public subnet.
 - Security will be non-default SSH port, non-default HTTP port, and restrict SSH access to USA IPs, and WireGuard tunnel needed for any SSH access (but how to include that in security group rules?), SSH access only from wireguard local ip address, and restrict access to HTTP to cloudfront only. (also, should I lock down outgoing traffic? it kind of makes sense but what about downloading software updates and certificate updates? I guess just allow access to those repositories.)

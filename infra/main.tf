@@ -64,6 +64,8 @@
 # sudo conntrack -D -p tcp --dport 80 # I think I can use this to only flush the incoming HTTP connections, haven't tested it.
 # ```
 
+# TODO: encrypt my tf bucket.
+
 terraform {
 	required_providers {
 		aws = {
@@ -216,6 +218,48 @@ resource "aws_cloudfront_distribution" "www" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+}
+
+variable "client_public_key" {
+  description = "WireGuard public key for client"
+  type        = string
+  sensitive   = true
+}
+
+variable "client_private_key" {
+  description = "WireGuard private key for client"
+  type        = string
+  sensitive   = true
+}
+
+variable "server_public_key" {
+  description = "WireGuard public key for server"
+  type        = string
+  sensitive   = true
+}
+
+variable "server_private_key" {
+  description = "WireGuard private key for server"
+  type        = string
+  sensitive   = true
+}
+
+locals {
+  wireguard_keys = {
+    client_public = var.client_public_key
+    client_private = var.client_private_key
+    server_public = var.server_public_key
+    server_private = var.server_private_key
+  }
+}
+
+resource "aws_ssm_parameter" "wireguard" {
+  for_each = local.wireguard_keys
+  name = "/wireguard/${each.key}_key"
+  type = "SecureString"
+  value_wo = each.value
+  value_wo_version = "0"
+  tier = "Standard"
 }
 
 output "cloudfront_domain_name" {
