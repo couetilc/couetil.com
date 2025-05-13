@@ -18,19 +18,34 @@ Endpoint = $ip_www:51820
 AllowedIPs = 10.0.0.1/32
 "
 
+conf="$rootdir/.local/www0.conf"
+interface="$(basename $conf | sed 's/.conf//')"
+
 # define CLI API
 
 up() {
-	mkdir -p "$rootdir/.local"
-	echo "$wg_client_conf" | op inject > "$rootdir/.local/www.wg0.conf"
-	wg-quick up "$rootdir/.local/www.wg0.conf"
+	# todo: if interface is up, simply `wg-quick save $new_config` to change settings
+	mkdir -p "$(dirname "$conf")"
+
+	_umask="$(umask)"
+	umask 0077
+	echo "$wg_client_conf" | op inject > "$conf"
+	umask $_umask
+
+	chmod 700 "$conf"
+	wg-quick up "$conf"
 }
 
 down() {
-	if [ -d "$rootdir/.local" ] && [ -f "$rootdir/.local/www.wg0.conf" ]; then
-		wg-quick down "$rootdir/.local/www.wg0.conf"
-		rm -f "$rootdir/.local/www.wg0.conf"
+	if [ -d "$(dirname conf)" ] && [ -f "$conf" ]; then
+		wg-quick down "$conf"
+		rm -f "$conf"
 	fi
+}
+
+is_up() {
+	test=$([ -f "/var/run/wireguard/$interface.name" ])
+	return $test
 }
 
 # validate CLI arguments
