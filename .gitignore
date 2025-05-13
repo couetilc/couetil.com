@@ -2,6 +2,7 @@ notes.md
 build/
 db
 .vscode
+.local
 
 # terraform
 **/.terraform/**
