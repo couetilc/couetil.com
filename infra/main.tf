@@ -247,43 +247,32 @@ resource "aws_cloudfront_distribution" "www" {
   }
 }
 
-variable "client_public_key" {
-  type        = string
-  sensitive   = true
-}
+# really this should be a custom provider for a wireguard resource.
+# in the short term I could make it a SOPS provider and store in-repo.
 
-variable "client_private_key" {
-  type        = string
-  sensitive   = true
-}
-
-variable "server_public_key" {
-  type        = string
-  sensitive   = true
-}
-
-variable "server_private_key" {
-  type        = string
-  sensitive   = true
-}
-
-locals {
-  wireguard_keys = {
-    client_public = var.client_public_key
-    client_private = var.client_private_key
-    server_public = var.server_public_key
-    server_private = var.server_private_key
-  }
-}
-
-resource "aws_ssm_parameter" "wireguard" {
-  for_each = local.wireguard_keys
-  name = "/www/wireguard/${each.key}_key"
-  type = "SecureString"
-  value = each.value
-  tier = "Standard"
-}
-
+# resource "aws_ssm_parameter" "wireguard" {
+#   for_each = tomap({
+#     server_public = "./server_public.key"
+#     server_private = "./server_private.key"
+#     client_public = "./client_public.key"
+#     client_private = "./client_private.key"
+#   })
+#   name = "/www/wireguard/${each.key}_key"
+#   type = "SecureString"
+#   value = ""
+#   tier = "Standard"
+# }
+#
+# data "external" "example" {
+#   # for_each = toset("server", "client")
+#   for_each = toset("server_public", "server_private", "client_public", "client_private")
+#   program = [
+#     "sops",
+#     "decrypt",
+#     "[wireguard].${each.value}"
+#   ]
+# }
+#
 output "cloudfront_domain_name" {
   description = "CloudFront URL for your service"
   value       = aws_cloudfront_distribution.www.domain_name
