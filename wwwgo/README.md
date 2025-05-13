@@ -2,6 +2,41 @@
 
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
+WIREGUARD Management
+- I need to generate:
+    - a wireguard client configuration that will fetch dynamic data like:
+	- public ip of VM wireguard server is running on
+	- Public key of wireguard server
+	- Private Key of wireguard client
+    - a wireguard server configuration that will fetch dynamic data like:
+	- private key of wireguard server
+	- public key of wireguard client
+- what does the lifecycle of this look like?
+    - for the server:
+	- baked into VM image with Packer
+	- do I want to allow updating this at VM runtime? IDK
+	    - wouldn't be super hard, but I would need to create a script in bin/ that does this e.g. `.wg-rotate`
+    - for the client
+	- hopefully using direnv lifecycle, I can write into a temporary folder for the lifetime of the session
+	- e.g.
+	    - cd into directory
+		- configuration file is generating and written into temp/hidden folder
+		- wireguard interface is brought up
+	    - cd out of directory
+		- wireguard interface is brought down
+		- temporary/hidden directory is cleaned up
+- I can't exactly use direnv here, because wireguard is a system-wide service
+  and direnv is per-shell env/path management, so I will just have to have
+  scripts that check my "www.couetil.com" wireguard interface is up, and if
+  not, spin it up before connecting to the server. I will have those scripts
+  write a config file to the right place too, and have a script to update the
+  conf file whenever I update the secrets.
+    - e.g.
+	- `bin/.connect`: `./vpn up` -> ssh to box using wg IP
+	- `bin/.vpn client-up`: script to open wg interface (if not already up) -> writes conf file for client -> wg-quick up
+	- `bin/.vpn client-down`: script to close wg interface (if not already down) -> wg-quick down -> removes conf file for client
+    - I think I need a name for this interface that is not "wg0"? "vpn.couetil.com"?
+
 SYSTEMD SETUP
 - Go through these
     - https://mgdm.net/weblog/systemd/
