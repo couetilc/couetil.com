@@ -66,6 +66,8 @@
 
 # TODO: encrypt my tf bucket.
 
+# NOTE: most kernels need to sysctl (Need to put content "net.ipv4.ip_forward = 1" to a file in /etc/sysctl.conf)
+
 terraform {
 	required_providers {
 		aws = {
@@ -146,6 +148,31 @@ resource "aws_vpc_security_group_ingress_rule" "allow_cloudfront" {
   to_port           = 80
 }
 
+resource "aws_vpc_security_group_ingress_rule" "allow_wireguard" {
+  security_group_id = aws_security_group.www.id
+  cidr_ipv4	    = "0.0.0.0/0"
+  from_port         = 51820
+  ip_protocol       = "udp"
+  to_port           = 51820
+}
+
+# so wireguard config will look like
+# ```wg
+# [Interface]
+# Address = 10.0.01/24
+# ListenPort = 51820
+# PrivateKey = {{ .PrivateKey }}
+# # note: these commands should be a small script that checks for the presence of these rules
+# PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+# PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+# 
+# [Peer]
+# PublicKey = _
+# AllowedIPs = 10.0.0.2/32
+# ```
+
+# I need to make users for all these services on the VM.
+
 // eventually want to close this off, there should be no egress unless to within the VPC
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   security_group_id = aws_security_group.www.id
@@ -221,25 +248,21 @@ resource "aws_cloudfront_distribution" "www" {
 }
 
 variable "client_public_key" {
-  description = "WireGuard public key for client"
   type        = string
   sensitive   = true
 }
 
 variable "client_private_key" {
-  description = "WireGuard private key for client"
   type        = string
   sensitive   = true
 }
 
 variable "server_public_key" {
-  description = "WireGuard public key for server"
   type        = string
   sensitive   = true
 }
 
 variable "server_private_key" {
-  description = "WireGuard private key for server"
   type        = string
   sensitive   = true
 }
@@ -255,10 +278,9 @@ locals {
 
 resource "aws_ssm_parameter" "wireguard" {
   for_each = local.wireguard_keys
-  name = "/wireguard/${each.key}_key"
+  name = "/www/wireguard/${each.key}_key"
   type = "SecureString"
-  value_wo = each.value
-  value_wo_version = "0"
+  value = each.value
   tier = "Standard"
 }
 
