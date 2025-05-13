@@ -74,6 +74,10 @@ terraform {
 			source = "hashicorp/aws"
 			version = "~> 5.0"
 		}
+		external = {
+			source = "hashicorp/external"
+			version = "~> 2.0"
+		}
 	}
 
 	backend "s3" {
@@ -247,68 +251,28 @@ resource "aws_cloudfront_distribution" "www" {
   }
 }
 
-data "aws_caller_identity" "me" {}
-
-resource "aws_kms_key" "sops" {
-  description = "customer-managed key for SOPS secret encryption"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id = "key-default-1"
-    Statement = [
-      {
-	Sid = "AllowAccountAdmin"
-	Effect = "Allow"
-	Principal = {
-	  AWS = "arn:aws:iam::${data.aws_caller_identity.me.account_id}:root"
-	},
-	Action = "kms:*"
-	Resource = "*"
-      },
-      {
-	Sid = "AllowSopsUsage"
-	Effect = "Allow"
-	Principal = {
-	  AWS = "arn:aws:iam::073298609415:user/connor"
-	},
-	Action = [
-	  "kms:Encrypt",
-	  "kms:Decrypt",
-	  "kms:ReEncrypt*",
-	  "kms:GenerateDataKey*",
-	  "kms:DescribeKey",
-	]
-	Resource = "*"
-      }
-    ]
-  })
-}
-
 # really this should be a custom provider for a wireguard resource.
 # in the short term I could make it a SOPS provider and store in-repo.
 
-# resource "aws_ssm_parameter" "wireguard" {
-#   for_each = tomap({
-#     server_public = "./server_public.key"
-#     server_private = "./server_private.key"
-#     client_public = "./client_public.key"
-#     client_private = "./client_private.key"
-#   })
-#   name = "/www/wireguard/${each.key}_key"
-#   type = "SecureString"
-#   value = ""
-#   tier = "Standard"
-# }
+data "external" "secrets" {
+  program = [
+    "bash",
+    "${path.module}/secrets.sh",
+  ]
+}
 
-# data "external" "example" {
-#   # for_each = toset("server", "client")
-#   for_each = toset("server_public", "server_private", "client_public", "client_private")
-#   program = [
-#     "sops",
-#     "decrypt",
-#     "[wireguard].${each.value}"
-#   ]
-# }
+resource "aws_ssm_parameter" "wireguard" {
+  for_each = toset([
+    "server_public_key",
+    "server_private_key",
+    "client_public_key",
+    "client_private_key",
+  ])
+  name = "/www/wireguard/${each.value}"
+  type = "SecureString"
+  value = data.external.secrets.result[each.value]
+  tier = "Standard"
+}
 
 output "cloudfront_domain_name" {
   description = "CloudFront URL for your service"
@@ -318,9 +282,4 @@ output "cloudfront_domain_name" {
 output "ec2_public_ip" {
   description = "www public ip"
   value       = aws_instance.www.public_ip
-}
-
-output "sops_key_arn" {
-  description = "KMS Key ARN for SOPS"
-  value = aws_kms_key.sops.arn
 }
