@@ -2,6 +2,28 @@
 
 Go server powering the home page for my domain, [couetil.com](https://www.couetil.com).
 
+PASSWORD Management:
+- currently I'm using SOPS and a secrets.yaml file for secret management
+- 1password's `op` command line tool has a command, `op run`, which will
+  resolve any environment variables that are `op://` URIs to the value.
+    - Then I won't need that KMS key anymore, less money per month, good idea
+      here. And my project dependency switches from SOPS to `op`. But, how will
+      I decrypt secrets on the server? Maybe I don't need to, I can bake it
+      into an image, or send commands over an SSH session. OK, let's try it.
+      Then commands in `bin/` can be prefixed with `op run -- <command>`
+      whenever I need a secret from the environment.
+	- I can also make it prod/dev environment specific, see `op run -h`
+	```
+	DB_USERNAME = op://$APP_ENV/db/username
+	DB_PASSWORD = op://$APP_ENV/db/password
+	# now I can 
+	export APP_ENV="dev"
+	# or
+	export APP_ENV="prod"
+	# and `op run` will resolve the DB_* according to APP_ENV
+	```
+	- And can inject into files using `{{ op://* }}` syntax!
+
 WIREGUARD Management
 - I need to generate:
     - a wireguard client configuration that will fetch dynamic data like:
@@ -35,7 +57,7 @@ WIREGUARD Management
 	- `bin/.connect`: `./vpn up` -> ssh to box using wg IP
 	- `bin/.vpn client-up`: script to open wg interface (if not already up) -> writes conf file for client -> wg-quick up
 	- `bin/.vpn client-down`: script to close wg interface (if not already down) -> wg-quick down -> removes conf file for client
-    - I think I need a name for this interface that is not "wg0"? "vpn.couetil.com"?
+    - I think I need a name for this interface that is not "wg0"? "vpn.couetil.com"? "www.wg0"? (limited to 1-15 characters, pattern is "[a-zA-Z0-9_=+.-]{1,15}"
 
 SYSTEMD SETUP
 - Go through these
