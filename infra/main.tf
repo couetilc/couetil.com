@@ -135,15 +135,15 @@ resource "aws_security_group" "www" {
   description = "Allow HTTP only from CloudFront"
   vpc_id      = local.vpc.id
 }
-
-resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
-  security_group_id = aws_security_group.www.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 22
-  ip_protocol       = "tcp"
-  to_port           = 22
-}
-
+#
+# resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
+#   security_group_id = aws_security_group.www.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port         = 22
+#   ip_protocol       = "tcp"
+#   to_port           = 22
+# }
+#
 resource "aws_vpc_security_group_ingress_rule" "allow_cloudfront" {
   security_group_id = aws_security_group.www.id
   prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
