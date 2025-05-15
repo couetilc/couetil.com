@@ -7,25 +7,19 @@ packer {
 	}
 }
 
-#data "amazon-ami" "al2023-minimal" {
-#	filters = {
-#		architecture = "arm64"
-#		virtualization-type = "hvm"
-#		hypervisor = "xen"
-#		ena-support = true // t4g is a Nitro instance
-#		product-code = "b6x93o9l9kui3ffv95cpb0nqw"
-#	}
-#	most_recent = true
-#	owners = ["amazon", "aws-marketplace"]
-#}
+variable "path_www0_conf" { type = string }
+variable "path_wg_conf" { type = string }
+variable "path_www_bin" { type = string }
+variable "path_www_service" { type = string }
 
-# I want this ami /aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-arm64"
+# snapshot size is ~1.8GB in size with ebs volume size 8GB, minimal is ~1.3GB
+# with volume size around 2GB
+
 data "amazon-parameterstore" "al2023-minimal" {
 	name = "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-arm64"
 }
 
 data "amazon-parameterstore" "al2023" {
-	// adds on about .5g to snapshot size compared to minimal, and volume size ends up 8GB instead of 2GB.
 	name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
@@ -47,16 +41,23 @@ build {
 		"source.amazon-ebs.al2023"
 	]
 
-	provisioner "shell" {
-		inline = [
-			// update all packages
-			"sudo dnf update -y",
-			// Install WireGuard tools (kernel module is included in AL2023
-			"sudo dnf install -y wireguard-tools",
-			// (Optional) Enable a WireGuard interface template
-			"sudo systemctl enable wg-quick@wg0",
-			// Clean Up
-			"sudo dnf clean all",
+	provisioner "file" {
+		sources = [
+			var.path_wg_conf,
+			var.path_www0_conf,
+			var.path_www_bin,
+			var.path_www_service,
 		]
+		destination = "/home/ec2-user/"
+	}
+
+	provisioner "shell" {
+		env = {
+			"wg_conf" = basename(var.path_wg_conf),
+			"www0_conf" = basename(var.path_www0_conf),
+			"www_bin" = basename(var.path_www_bin),
+			"www_service" = basename(var.path_www_service),
+		}
+		script = "bootstrap.sh"
 	}
 }
