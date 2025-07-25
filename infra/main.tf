@@ -4,23 +4,14 @@
 # 8. Set up logging and make sure sometime type of monitoring is enabled on the ec2 instance.
 
 # OK VM Image Stuff:
-# - cloud init, the user_data is not working for whatever reason.
-#    - 
 # - need to locked down SSH. No password access, only key access. (so modify system sshd_config)
-# - need to set up a Docker credential store on boot: `sudo dnf install -y amazon-ecr-credential-helper` see https://github.com/awslabs/amazon-ecr-credential-helper
-# - need to have docker installed, and other dependencies.
-# - need to have it pull the image from my ECR repo? Or already have the image on file system somehow?
 
-# cloud init:
+# SYSTEM CONFIG
 # what needs to happen?
 # - change user to something else (not "ec2-user")
-# - configure iptables (same as aws security group. Also to keep a log of all network requests.)
+# - configure iptables (should use nftables) (same as aws security group. Also to keep a log of all network requests.)
 # - configure the go app as a systemd service (so I can use socket activation for rolling deploys. need to udnerstand socket activation better)
-# - what other logging can I configure? application i guess? Other kernel logs? log rotation.
-# - install application dependencies? I guess not if docker? or I just deploy the binary? Nothing else on the server. or I just run the container to get isolation, no overhead on linux. And every cloud provider optimizes for containers.
 # - what about security updates? for system programs? and the OS itself? How to keep updated? This might be where AWS Systems Manager comes in. There are AMI images where it is included. Like 
-# - multipart mime type of cloud-config is awesome. great idea.
-# - I can use hashicorp packer tool to make this image have everything at boot. Same syntax as terraform I believe. And will include the latest www go binary. So I rebuild VM on every release.
 
 # Rolling Deploys:
 # - the best option for rolling deploys seems to be socket activation with
@@ -65,8 +56,6 @@
 # ```
 
 # TODO: encrypt my tf bucket.
-
-# NOTE: most kernels need to sysctl (Need to put content "net.ipv4.ip_forward = 1" to a file in /etc/sysctl.conf)
 
 terraform {
 	required_providers {
@@ -160,21 +149,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_wireguard" {
   to_port           = 51820
 }
 
-# so wireguard config will look like
-# ```wg
-# [Interface]
-# Address = 10.0.01/24
-# ListenPort = 51820
-# PrivateKey = {{ .PrivateKey }}
-# # note: these commands should be a small script that checks for the presence of these rules
-# PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-# PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-# 
-# [Peer]
-# PublicKey = _
-# AllowedIPs = 10.0.0.2/32
-# ```
-
 # I need to make users for all these services on the VM.
 
 // eventually want to close this off, there should be no egress unless to within the VPC
@@ -250,9 +224,6 @@ resource "aws_cloudfront_distribution" "www" {
     cloudfront_default_certificate = true
   }
 }
-
-# really this should be a custom provider for a wireguard resource.
-# in the short term I could make it a SOPS provider and store in-repo.
 
 data "external" "secrets" {
   program = [

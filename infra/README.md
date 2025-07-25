@@ -5,7 +5,9 @@
 to get a list of AMIs for use with Amazon through System Manager Parameters:
 
 ```sh
-aws ssm get-parameters-by-path  --path /aws/service/ami-amazon-linux-latest  --query 'Parameters[].Name'
+aws ssm get-parameters-by-path \
+	--path /aws/service/ami-amazon-linux-latest \
+	--query 'Parameters[].Name'
 ```
 
 For raw image information straight from ec2 (this is usually a high number of images):

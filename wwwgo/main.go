@@ -10,7 +10,29 @@ import (
 	"strings"
 	"log/slog"
 	"flag"
+	"sync"
 )
+
+//go:embed templates
+var templatesFS embed.FS
+//go:embed static
+var staticFS embed.FS
+var bootTime time.Time
+
+func init() {
+	bootTime = time.Now()
+	slog.Info("boot", "time", bootTime.UTC().Format(time.UnixDate))
+}
+
+func main() {
+	addr := flag.String("addr", ":http", "TCP address for server to listen on. See net.Dial for address format.")
+	flag.Parse()
+
+	if err := NewServer(addr).ListenAndServe(); err != nil {
+		slog.Error("exit", "error", err)
+		os.Exit(1)
+	}
+}
 
 type Server struct {
 	http.Server
@@ -24,6 +46,7 @@ func NewServer(addr *string) *Server {
 	mux.Handle("/about/{$}", nt.NewHandler("page_about.tmpl", http.StatusOK))
 	mux.Handle("/portfolio/{$}", nt.NewHandler("page_portfolio.tmpl", http.StatusOK))
 	mux.Handle("/static/", http.FileServerFS(staticFS))
+	mux.Handle("/asset/{$}", &AssetHandler{staticFS})
 	mux.Handle("/", nt.NewHandler("page_404.tmpl", http.StatusNotFound))
 
 	s := new(Server)
@@ -99,23 +122,19 @@ func (rl *RequestLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-//go:embed templates
-var templatesFS embed.FS
-//go:embed static
-var staticFS embed.FS
-var bootTime time.Time
 
-func init() {
-	bootTime = time.Now()
-	slog.Info("boot", "time", bootTime.UTC().Format(time.UnixDate))
+type AssetHandler struct {
+	embed.FS
+	sync.Map
 }
 
-func main() {
-	addr := flag.String("addr", ":http", "TCP address for server to listen on. See net.Dial for address format.")
-	flag.Parse()
+func (h *AssetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// determine asset target from request
+	// check cache for match to request asset string
+	// if in cache, return target
+	// if not in cache,
+	//	- check FS for asset, if not there then return 404.
+	//	- if found, calculate hash and put in cache, then return target
 
-	if err := NewServer(addr).ListenAndServe(); err != nil {
-		slog.Error("exit", "error", err)
-		os.Exit(1)
-	}
+	// Todo, cache headers (cache-control and e-tag)
 }
