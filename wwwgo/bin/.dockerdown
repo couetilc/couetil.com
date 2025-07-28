@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+# specify container tag
+container_id="$(docker ps --filter ancestor="$docker_image" --format "{{.ID}}")"
+
+# container is
+if [ -n "$container_id" ]; then
+	docker kill "$container_id"
+fi

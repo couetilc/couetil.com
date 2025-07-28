@@ -1,0 +1,91 @@
+@font-face {
+    font-family: 'Rubik';
+    src: local('Rubik Regular'), local('Rubik-Regular'),
+        url('fonts_Rubik-Regular.woff2') format('woff2'),
+        url('fonts_Rubik-Regular.woff') format('woff'),
+        url('fonts_Rubik-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'Bungee';
+    src: local('Bungee'), local('Bungee-Regular'),
+        url('fonts_Bungee-Regular.woff2') format('woff2'),
+        url('fonts_Bungee-Regular.woff') format('woff'),
+        url('fonts_Bungee-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'subset-Bungee';
+    src: local('Bungee'), local('Bungee-Regular'),
+        url('fonts_subset-Bungee-Regular.woff2') format('woff2'),
+        url('fonts_subset-Bungee-Regular.woff') format('woff'),
+        url('fonts_subset-Bungee-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'Bitter';
+    src: url('fonts_Bitter-Italic.woff2') format('woff2'),
+        url('fonts_Bitter-Italic.woff') format('woff'),
+        url('fonts_Bitter-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bitter';
+    src: url('fonts_Bitter-Regular.woff2') format('woff2'),
+        url('fonts_Bitter-Regular.woff') format('woff'),
+        url('fonts_Bitter-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Rubik', system-ui; 
+}
+
+html {
+  background-color: black;
+  font-size: 18px;
+}
+
+header {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  padding: 0;
+  margin: 0;
+  font-family: 'subset-Bungee', monospace;
+  font-size: 1.75em;
+}
+
+nav {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding-top: .25em;
+}
+
+header a {
+  color: black;
+  text-decoration: none;
+}
