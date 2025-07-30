@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker build -t connor.couetil.com $@
+docker build -t connor.couetil.com "$connor"

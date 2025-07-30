@@ -1,11 +1,9 @@
-FROM node:current-alpine
-#RUN apk add --no-cache curl
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM python:3-alpine
+
+
 
 WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install
-COPY . .
-RUN pnpm build
 
-ENTRYPOINT ["pnpm"]
+COPY . .
+
+CMD ["python"]
