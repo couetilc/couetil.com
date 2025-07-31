@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="/static/portfolio.css">
+{% endblock %}
+
+{% block body %}
+<section id="portfolio">
+  {% include "nav.html" %}
+
+  <div class="portfolio-items">
+
+    <!-- TODO some type of "click to expand" for the preview images -->
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          Couetil.com
+          <span class="stripe bg-color-purple"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Personal website built from a public GitHub repo
+      </h2>
+      <a class="portfolio-item-preview" href="https://github.com/couetilc/couetil.com">
+        <img src="/static/img_couetilcom.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>
+          Powered by <a href="https://caddyserver.com/">Caddy server</a>
+          and generated using
+          <a href="https://golang.org/pkg/text/template/">Go templates</a>
+          and <a href="https://www.snowpack.dev/">Snowpack</a>.
+        </li>
+        <li>
+          Deployed
+          using <a href="https://docs.docker.com/compose/">Docker Compose</a>
+          on a <a href="https://www.digitalocean.com/">Digital Ocean</a> droplet
+          alongside an <a href="https://whoisit.couetil.com/couetil.com">analytics service</a>.
+        </li>
+        <li>
+          Secrets are encrypted with PGP and stored in git using
+          <a href="https://github.com/mozilla/sops">Mozilla sops</a>.
+        </li>
+        <li><a href="https://couetil.com">Website URL</a> and <a href="https://github.com/couetilc/couetil.com">GitHub Repo</a>.</li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          EquineLungExperts.com
+          <span class="stripe bg-color-green"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Designed responsive website enabling clients to request services from
+        veterinarians
+      </h2>
+      <a class="portfolio-item-preview" href="https://equinelungexperts.com">
+        <img src="/static/img_equinelungexperts.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>Designed using <a href="https://www.sketch.com/">Sketch</a> and styled with <a href="https://sass-lang.com/">SASS</a>.</li>
+        <li>Wrote marketing copy, created logo and other graphics.</li>
+        <li>
+          <a href="https://nextjs.org/">Next.js</a> powered <a href="https://reactjs.org/">React</a>
+          front-end served by <a href="https://aws.amazon.com/cloudfront/">AWS Cloudfront</a>
+          with CI/CD using <a href="https://github.com/features/actions">GitHub actions</a>.
+        </li>
+        <li><a href="https://equinelungexperts.com">Website URL</a> and <a href="https://github.com/couetilc/equine-lung-experts">GitHub Repo</a>.</li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          react-social-icons
+          <span class="stripe bg-color-pink"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Co-maintain an Open-Source React.js package on NPM with 10,000+
+        weekly downloads
+      </h2>
+      <a class="portfolio-item-preview" href="https://github.com/couetilc/react-social-icons">
+        <img src="/static/img_reactsocialicons.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>Prepared <a href="https://github.com/couetilc/react-social-icons/releases/tag/v5.0.0">v5.0.0</a> release, closing 15+ issues and pull requests.</li>
+        <li>Designed new icons using <a href="https://inkscape.org/">Inkscape</a> and updated documentation for contributors.</li>
+        <li>Created CI/CD pipeline with <a href="https://github.com/features/actions">GitHub Actions</a> for testing contributions and publishing releases.</li>
+        <li><a href="https://github.com/couetilc/react-social-icons">GitHub Repo</a> and <a href="https://www.npmjs.com/package/react-social-icons">NPM Package</a>.</li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          caddy-gen
+          <span class="stripe bg-color-blue"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Open-source project using Caddy web server released on DockerHub
+        and GitHub
+      </h2>
+      <a class="portfolio-item-preview" href="https://github.com/couetilc/caddy-gen">
+        <img src="/static/img_caddygen.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>
+          Proxies requests and pulls TLS certificates for Docker services by
+          generating a <a href="https://caddyserver.com/docs/caddyfile">Caddyfile</a>
+          using <a href="https://github.com/jwilder/docker-gen">docker-gen</a>
+          and <a href="https://golang.org/pkg/text/template/">Go templates</a>.
+        </li>
+        <li>
+          Pushed features upstream, closing several issues and pull
+          requests while adding tests, updating documentation, and fixing
+          the <a href="https://www.travis-ci.com/">Travis CI</a> pipeline.
+        </li>
+        <li>
+          <a href="https://github.com/couetilc/caddy-gen">GitHub Repo</a> and <a href="https://hub.docker.com/r/couetilc/caddy-gen">DockerHub Repo</a>.
+        </li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          resume
+          <span class="stripe bg-color-yellow"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        My open-source résumé, built using web technologies
+      </h2>
+      <a class="portfolio-item-preview" href="https://github.com/couetilc/resume">
+        <img src="/static/img_resume.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>
+          Developed with <a href="https://github.com/couetilc/resume/blob/main/cli.js">a CLI</a>
+          anyone can use to produce their own résumé webpage and PDF.
+        </li>
+        <li>
+          Styled with <a href="https://sass-lang.com/">SASS</a> and uses
+          <a href="https://webpack.js.org/">Webpack</a> to compile all
+          assets as an HTML bundle. <a href="https://github.com/puppeteer/puppeteer">Puppeteer</a>
+          then renders the résumé as a PDF.
+        </li>
+        <li>
+          <a href="https://github.com/couetilc/resume">GitHub Repo</a> and <a href="https://npmjs.com/package/cc-resume">NPM Package</a>.
+        </li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          aws-transcribe-audio
+          <span class="stripe bg-color-emerald"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Open-source software to automatically transcribe audio files added
+        to AWS S3 buckets
+      </h2>
+      <a class="portfolio-item-preview" href="https://github.com/couetilc/aws-transcribe-audio">
+        <img src="/static/img_awstranscribe.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>
+          Created for a podcast owner who wanted quick, cheap transcripts
+          for their episodes.
+        </li>
+        <li>
+          Thorough documentation and CLI methods organized by
+          <a href="https://www.gnu.org/software/make/manual/make.html">Makefile</a>
+          to install, update, and remove the project from a specified AWS
+          account.
+        </li>
+        <li><a href="https://github.com/couetilc/aws-transcribe-audio">GitHub Repo</a></li>
+      </ul>
+    </div>
+
+    <div class="portfolio-item">
+      <h1 class="portfolio-item-heading">
+        <div>
+          Babblenauts
+          <span class="stripe bg-color-orange"></span>
+        </div>
+      </h1>
+      <h2 class="portfolio-item-subheading">
+        Winner of "Most Inspirational" Hackathon project at NASA SpaceApps
+        2018 in NYC
+      </h2>
+      <a class="portfolio-item-preview" href="https://2018.spaceappschallenge.org/challenges/universe-beauty-and-wonder/virtual-space-exploration/teams/babblenauts/project">
+        <img src="/static/img_babblenauts.jpg">
+      </a>
+      <ul class="portfolio-item-summary">
+        <li>
+          Voice control interface for <a href="https://www.openspaceproject.com/">OpenSpace</a>, an open-source C++ project
+          for visualizing the known universe and satellite data.
+        </li>
+        <li>
+          Came up with initial idea, designed React.js front-end for
+          controlling the interface, and implemented
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API">Speech Recognition API</a>.
+        </li>
+        <li><a href="https://github.com/couetilc/spaceapps2018">GitHub Repo</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+</section>
+{% endblock %}
