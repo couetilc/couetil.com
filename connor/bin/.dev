@@ -13,4 +13,4 @@ docker run \
     -p 8000:8000 \
     "$INTERACTIVE" \
     $(docker build -q $connor) \
-    $@
+    --dev
