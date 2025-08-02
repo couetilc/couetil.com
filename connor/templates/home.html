@@ -56,35 +56,73 @@
             <a href="/portfolio/">
               Portfolio
             </a>
-            <span class="underline"></span>
+            <svg class="highlight" style="stroke: var(--highlight-color, blue);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
           </span>
           <span class="nav-item">
             <a href="/resume/">
               Resume
             </a>
-            <span class="underline"></span>
+            <svg class="highlight" style="stroke: var(--highlight-color, orange);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
           </span>
           </span>
           <span class="nav-item">
             <a href="https://github.com/couetilc">
               GitHub
             </a>
-            <span class="underline"></span>
+            <svg class="highlight" style="stroke: var(--highlight-color, green);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
           </span>
           <span class="nav-item">
             <a href="https://linkedin.com/in/connorcouetil">
               LinkedIn
             </a>
-            <span class="underline"></span>
+            <svg class="highlight" style="stroke: var(--highlight-color, purple);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
           </span>
           <span class="nav-item">
             <a href="/about/">
               About
             </a>
-            <span class="underline"></span>
+            <svg class="highlight" style="stroke: var(--highlight-color, magenta);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
           </span>
         </nav>
       </header>
     </div>
+    <script>
+      (function () {
+        function nextColor() {
+          // const colors = [
+          //   'blue',
+          //   'rgb()',
+          //   'orange',
+          //   'green',
+          //   'purple',
+          //   'magenta',
+          // ];
+          // const colors = ['#4FA3D9', '#7AA974', '#F25C54', '#D6A84F', '#4D5E6D', '#A267AC', '#F5F5F5'];
+          const colors = [
+            'rgba(79, 163, 217, 0.3)',
+            'rgba(122, 169, 116, 0.3)',
+            'rgba(242, 92, 84, 0.3)',
+            'rgba(214, 168, 79, 0.3)',
+            'rgba(77, 94, 109, 0.3)',
+            'rgba(162, 103, 172, 0.3)',
+            'rgba(245, 245, 245, 0.3)',
+          ];
+          let i = 0;
+          return () => {
+            c = colors[i];
+            i = (i + 1) % colors.length;
+            return c;
+          }
+        }
+        const next = nextColor();
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+          item.style.setProperty('--highlight-color', next());
+          item.addEventListener('mouseout', () => {
+            item.style.setProperty('--highlight-color', next());
+          });
+        })
+      })();
+    </script>
   </section>
 {% endblock %}
