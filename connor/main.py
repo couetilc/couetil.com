@@ -63,10 +63,10 @@ def generate_template_files(outdir):
 def copy_static_files(outdir):
     static_dir = Path("static")
     dist_static_dir = Path(outdir) / "static"
-    shutil.copytree(static_dir, dist_static_dir)
+    shutil.copytree(static_dir, dist_static_dir, dirs_exist_ok=True, )
 
 def main(args):
-    shutil.rmtree(args.output, ignore_errors=True)
+    # shutil.rmtree(args.output, ignore_errors=True)
     os.makedirs(args.output, exist_ok=True)
 
     # Feature: Satellite image background

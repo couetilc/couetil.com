@@ -10,6 +10,6 @@ COPY . .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-COPY --from=resume:latest /dist /dist
+COPY --from=resume:latest /dist /app/dist/resume
 
 ENTRYPOINT ["python", "main.py"]
