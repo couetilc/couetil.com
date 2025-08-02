@@ -84,17 +84,31 @@ nav a {
       stroke: rgba(203, 53, 53, 0.5);
       fill: none;
       stroke-width: 8;
+      /*
       stroke-dasharray: 1000;
       stroke-dashoffset: 1000;
-      transition: stroke-dashoffset 0.5s ease-out;
-      transform: translateY(50%) scaleX(1.2) translateX(.5em);
+      */
+      stroke-dasharray: 0;
+      stroke-dashoffset: 0;
+      /*
+      transition: transform 0.5s ease-out;
+      transform-origin: left;
+      transform: translateY(50%) scaleX(0) translateX(.5em);
       pointer-events: none;
+      */
+
+        clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.3s ease-out;
+  pointer-events: none;
+  transform: translateY(50%) translateX(.5em);
 }
-.navi-item * {
+.nav-item * {
   will-change: transform;
 }
 .nav-item:hover .highlight {
-  stroke-dashoffset: 0;
+  /* stroke-dashoffset: 0; */
+  /* transform: translateY(50%) scaleX(1.2) translateX(.5em); */
+  clip-path: inset(0 0 0 0);
 }
 .nav-item:hover .highlight {
   width: 100%;

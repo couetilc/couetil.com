@@ -8,7 +8,7 @@ fi
 
 docker run \
     --rm \
-    -v "$connor/":/app \
+    -v "$connor":/app \
     -v "/app/.venv" \
     -p 8000:8000 \
     "$INTERACTIVE" \

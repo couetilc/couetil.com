@@ -87,31 +87,43 @@
       </header>
     </div>
     <script>
-      (function () {
-        function nextColor() {
-          const colors = [
-            'rgba(79, 163, 217, 0.3)',
-            'rgba(122, 169, 116, 0.3)',
-            'rgba(242, 92, 84, 0.3)',
-            'rgba(214, 168, 79, 0.3)',
-            'rgba(77, 94, 109, 0.3)',
-            'rgba(162, 103, 172, 0.3)',
-            'rgba(245, 245, 245, 0.3)',
-          ];
-          let i = 0;
-          return () => {
-            c = colors[i];
-            i = (i + 1) % colors.length;
-            return c;
+      function throttle(fn, interval = 200) {
+        let lastTime = 0;
+        return function (...args) {
+          const now = Date.now();
+          if (now - lastTime >= interval) {
+            lastTime = now;
+            fn.apply(this, args);
           }
+        };
+      }
+      function nextColor() {
+        const colors = [
+          'rgba(79, 163, 217, 0.3)',
+          'rgba(122, 169, 116, 0.3)',
+          'rgba(242, 92, 84, 0.3)',
+          'rgba(214, 168, 79, 0.3)',
+          'rgba(77, 94, 109, 0.3)',
+          // 'rgba(162, 103, 172, 0.3)',
+          // 'rgba(245, 245, 245, 0.3)',
+        ];
+        let i = 0;
+        return () => {
+          c = colors[i];
+          i = (i + 1) % colors.length;
+          return c;
         }
+      }
+      (function () {
         const next = nextColor();
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-          item.style.setProperty('--highlight-color', next());
-          item.addEventListener('mouseout', () => {
-            item.style.setProperty('--highlight-color', next());
-          });
+        document.querySelector('nav')
+          .style.setProperty('--highlight-color', next());
+        const navLinks = document.querySelectorAll('.nav-item a');
+        navLinks.forEach(item => {
+          item.addEventListener('mouseenter', throttle(() => {
+            document.querySelector('nav')
+              .style.setProperty('--highlight-color', next());
+          }));
         })
       })();
     </script>

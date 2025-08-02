@@ -6,6 +6,8 @@ import argparse
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from http.server import SimpleHTTPRequestHandler, HTTPServer
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 routes = {
     '/': 'home.html',
@@ -13,9 +15,59 @@ routes = {
     '/about': 'about.html',
 }
 
+class DevLoop(FileSystemEventHandler):
+    def __init__(self, output_dir, watch_dirs=[]):
+        self.output_dir = output_dir
+        self.watch_dirs = watch_dirs
+        self.observer = Observer()
+        print(f"Watching directories: {', '.join(watch_dirs)}")
+        for watch_dir in watch_dirs:
+            self.observer.schedule(self, path=watch_dir, recursive=True)
+
+    def dev_steps(self):
+        print("Changes detected. Regenerating site...")
+        generate_template_files(self.output_dir)
+        copy_static_files(self.output_dir)
+
+    def on_created(self, event):
+        if event.is_directory:
+            return
+        self.dev_steps()
+    def on_modified(self, event):
+        if event.is_directory:
+            return
+        self.dev_steps()
+    def on_deleted(self, event):
+        if event.is_directory:
+            return
+        self.dev_steps()
+    def on_moved(self, event):
+        if event.is_directory:
+            return
+        self.dev_steps()
+
+    def stop(self):
+        self.observer.stop()
+        self.observer.join()
+
+def generate_template_files(outdir):
+    env = Environment(loader=FileSystemLoader('templates'))
+    for route, template in routes.items():
+        template = env.get_template(template)
+        content = template.render(path=route)
+        file_path = Path(outdir) / route.strip("/") / "index.html"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, 'w') as f:
+            f.write(content)
+
+def copy_static_files(outdir):
+    static_dir = Path("static")
+    dist_static_dir = Path(outdir) / "static"
+    shutil.copytree(static_dir, dist_static_dir)
+
 def main(args):
-    shutil.rmtree("dist", ignore_errors=True)
-    os.makedirs("dist", exist_ok=True)
+    shutil.rmtree(args.output, ignore_errors=True)
+    os.makedirs(args.output, exist_ok=True)
 
     # Feature: Satellite image background
     # todo: pull satellite image
@@ -23,24 +75,14 @@ def main(args):
     # todo: write optimized image links to template file
     # todo: write optimized images to destination
 
-    # Static site generation
-    env = Environment(loader=FileSystemLoader('templates'))
-    for route, template in routes.items():
-        template = env.get_template(template)
-        content = template.render(path=route)
-        file_path = Path("dist") / route.strip("/") / "index.html"
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, 'w') as f:
-            f.write(content)
-
-    # Copy static files
-    static_dir = Path("static")
-    dist_static_dir = Path("dist") / "static"
-    shutil.copytree(static_dir, dist_static_dir)
+    generate_template_files(args.output)
+    copy_static_files(args.output)
 
     if args.dev:
         print("Development mode enabled. Serving files from 'dist' directory.")
+        dev_loop = DevLoop(args.output, watch_dirs=['templates', 'static'])
         run_dev_server(args.output)
+        dev_loop.stop()
 
     pass
 
