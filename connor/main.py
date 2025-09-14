@@ -71,12 +71,15 @@ def main():
 
     def copy_static_files():
         dist_static_dir = Path(output_dir) / "static"
+        os.makedirs(dist_static_dir, exist_ok=True)
         shutil.copytree(static_dir, dist_static_dir, dirs_exist_ok=True, )
 
     render_template_files()
     copy_static_files()
 
-    # optimization: instead of threads, do processes? so fork? avoid GIL? detect child process signals and reap the process. Can use "multiprocessing" python module to do that for me.
+    # optimization: instead of threads, do processes? so fork? avoid GIL?
+    # detect child process signals and reap the process. Can use
+    # "multiprocessing" python module to do that for me.
     if dev:
         hot_reload = HotReload(
             tasks=[render_template_files, copy_static_files],
@@ -96,6 +99,7 @@ def main():
         hot_reload.start()
         staticd.start()
 
+        # blocking
         hot_reload.join()
         staticd.join()
 
@@ -113,8 +117,6 @@ class HotReload():
         hot_reload.join()  # waits for thread to stop
     """
 
-    log = log.getChild('HotReload')
-
     class EventHandler(FileSystemEventHandler):
         def __init__(self, handler, log):
             self.handler = handler
@@ -122,6 +124,8 @@ class HotReload():
         def on_any_event(self, event):
             self.log.debug(event)
             self.handler()
+
+    log = log.getChild('HotReload')
 
     def __init__(self, tasks=[], watch_dirs=[]):
         self.watch_dirs = []
@@ -176,14 +180,6 @@ class StaticFileServer():
         self.httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
         self.thread = threading.Thread(target=self.__serve)
 
-    @property
-    def address(self):
-        return self.httpd.server_address[0]
-
-    @property
-    def port(self):
-        return self.httpd.server_address[1]
-
     def start(self):
         self.log.info(f'Starting static file server address={self.address} port={self.port} directory={self.dir}')
         self.thread.start()
@@ -200,6 +196,14 @@ class StaticFileServer():
     def __serve(self):
         os.chdir(self.dir)
         self.httpd.serve_forever()
+
+    @property
+    def address(self):
+        return self.httpd.server_address[0]
+
+    @property
+    def port(self):
+        return self.httpd.server_address[1]
 
 
 if __name__ == "__main__":

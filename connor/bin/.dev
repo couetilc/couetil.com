@@ -6,13 +6,15 @@ else
     INTERACTIVE=""
 fi
 
+docker build -t connor.couetil.com:latest $connor
+
 docker run \
     --rm \
-    --label "$connor:dev-server" \
+    --name "connor.couetil.com" \
     -e "LOG_LEVEL=$LOG_LEVEL" \
-    -v "$connor":/app \
+    -v "$connor/main.py":/app/main.py \
     -v "/app/.venv" \
     -p 8000:8000 \
     "$INTERACTIVE" \
-    $(docker build -q $connor) \
+    connor.couetil.com:latest \
     --dev

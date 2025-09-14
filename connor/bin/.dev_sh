@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker exec -it $(docker ps -f name=connor.couetil.com -q) bash
