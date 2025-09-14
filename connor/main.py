@@ -22,68 +22,25 @@ routes = {
     '/about': 'about.html',
 }
 
-class HotReload(FileSystemEventHandler):
-    """
-    Runs tasks whenever a file in a directory changes
+def main():
+    log.info('Start')
 
-    Usage:
-        hot_reload = HotReload()
-        hot_reload.start() # starts thread
-        hot_reload.stop()  # stops thread
-        hot_reload.join()  # waits for thread to stop
-    """
+    parser = argparse.ArgumentParser(
+        description="Static site generator for Connor's portfolio."
+    )
+    parser.add_argument(
+        '--output',
+        type=str,
+        default='dist',
+        help='Output directory for the generated site.'
+    )
+    parser.add_argument(
+        '--dev',
+        action='store_true',
+        help='Enables development mode.'
+    )
+    args = parser.parse_args()
 
-    log = log.getChild('HotReload')
-
-    def __init__(self, tasks=[], watch_dirs=[]):
-        self.tasks = tasks
-        self.watch_dirs = []
-        for path in watch_dirs:
-            fullpath = os.path.join(os.getcwd(), path)
-            self.watch_dirs.append(fullpath)
-        self.observer = Observer()
-        for dir in self.watch_dirs:
-            self.observer.schedule(self, path=dir, recursive=True)
-
-    def run_tasks(self):
-        self.log.info("Running tasks")
-        for task in self.tasks:
-            task()
-
-    def on_any_event(self, event):
-        self.log.debug(event)
-        self.run_tasks()
-
-    def start(self):
-        self.observer.start()
-        self.log.info(f"Started watching {self.csv_watch_dirs}")
-
-    def stop(self):
-        self.observer.stop()
-        self.log.info(f"Stopped watching {self.csv_watch_dirs}")
-
-    def join(self):
-        self.observer.join()
-
-    @property
-    def csv_watch_dirs(self):
-        return ', '.join(self.watch_dirs)
-
-def generate_template_files(templatedir, outdir):
-    env = Environment(loader=FileSystemLoader(templatedir))
-    for route, template in routes.items():
-        template = env.get_template(template)
-        content = template.render(path=route)
-        file_path = Path(outdir) / route.strip("/") / "index.html"
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, 'w') as f:
-            f.write(content)
-
-def copy_static_files(static_dir, outdir):
-    dist_static_dir = Path(outdir) / "static"
-    shutil.copytree(static_dir, dist_static_dir, dirs_exist_ok=True, )
-
-def main(args):
     output_dir = os.path.join(os.getcwd(), args.output)
     dev = args.dev
     log.info(f'Arguments output={output_dir} dev={dev}')
@@ -102,16 +59,27 @@ def main(args):
     template_dir = os.path.join(init_cwd, "templates")
     static_dir = os.path.join(init_cwd, "static")
 
-    task_templates = lambda: generate_template_files(template_dir, output_dir)
-    task_static = lambda: copy_static_files(static_dir, output_dir)
+    def render_template_files():
+        env = Environment(loader=FileSystemLoader(template_dir))
+        for route, template in routes.items():
+            template = env.get_template(template)
+            content = template.render(path=route)
+            file_path = Path(output_dir) / route.strip("/") / "index.html"
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(file_path, 'w') as f:
+                f.write(content)
 
-    task_templates()
-    task_static()
+    def copy_static_files():
+        dist_static_dir = Path(output_dir) / "static"
+        shutil.copytree(static_dir, dist_static_dir, dirs_exist_ok=True, )
 
-    # todo: instead of threads, do processes? so fork? avoid GIL? detect child process signals and reap the process. Can use "multiprocessing" python module to do that for me.
+    render_template_files()
+    copy_static_files()
+
+    # optimization: instead of threads, do processes? so fork? avoid GIL? detect child process signals and reap the process. Can use "multiprocessing" python module to do that for me.
     if dev:
         hot_reload = HotReload(
-            tasks=[task_templates, task_static],
+            tasks=[render_template_files, copy_static_files],
             watch_dirs=['templates', 'static']
         )
         staticd = StaticFileServer(dir=output_dir)
@@ -130,6 +98,65 @@ def main(args):
 
         hot_reload.join()
         staticd.join()
+
+    log.info('Stop')
+
+
+class HotReload():
+    """
+    Runs tasks whenever a file in a directory changes
+
+    Usage:
+        hot_reload = HotReload()
+        hot_reload.start() # starts thread
+        hot_reload.stop()  # stops thread
+        hot_reload.join()  # waits for thread to stop
+    """
+
+    log = log.getChild('HotReload')
+
+    class EventHandler(FileSystemEventHandler):
+        def __init__(self, handler, log):
+            self.handler = handler
+            self.log = log.getChild('EventHandler')
+        def on_any_event(self, event):
+            self.log.debug(event)
+            self.handler()
+
+    def __init__(self, tasks=[], watch_dirs=[]):
+        self.watch_dirs = []
+        for path in watch_dirs:
+            fullpath = os.path.join(os.getcwd(), path)
+            self.watch_dirs.append(fullpath)
+
+        self.observer = Observer()
+
+        def run_tasks():
+            for task in tasks:
+                task()
+
+        for dir in self.watch_dirs:
+            self.observer.schedule(
+                self.EventHandler(run_tasks, self.log),
+                path=dir,
+                recursive=True
+            )
+
+    def start(self):
+        self.observer.start()
+        self.log.info(f"Started watching {self.csv_watch_dirs}")
+
+    def stop(self):
+        self.observer.stop()
+        self.log.info(f"Stopped watching {self.csv_watch_dirs}")
+
+    def join(self):
+        self.observer.join()
+
+    @property
+    def csv_watch_dirs(self):
+        return ', '.join(self.watch_dirs)
+
 
 class StaticFileServer():
     """
@@ -174,13 +201,6 @@ class StaticFileServer():
         os.chdir(self.dir)
         self.httpd.serve_forever()
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Static site generator for Connor's portfolio.")
-    parser.add_argument('--output', type=str, default='dist', help='Output directory for the generated site.')
-    parser.add_argument('--dev', action='store_true', help='Enables development mode.')
-    return parser.parse_args()
 
 if __name__ == "__main__":
-    log.info('Beginning')
-    main(parse_args())
-    log.info('End')
+    main()
