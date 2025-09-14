@@ -11,7 +11,7 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver as Observer
 
-logging_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO"), logging.INFO)
+logging_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(level=logging_level)
 log = logging.getLogger(__name__)
 log.info(f"LOG_LEVEL={logging_level}")

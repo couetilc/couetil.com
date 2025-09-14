@@ -12,6 +12,8 @@ docker run \
     --rm \
     --name "connor.couetil.com" \
     -e "LOG_LEVEL=$LOG_LEVEL" \
+    -v "$connor/templates":/app/templates \
+    -v "$connor/static":/app/static \
     -v "$connor/main.py":/app/main.py \
     -v "/app/.venv" \
     -p 8000:8000 \
