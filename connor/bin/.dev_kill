@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker kill $(docker ps --filter "label=$connor:dev-server" -q) 1>/dev/null

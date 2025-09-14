@@ -8,6 +8,8 @@ fi
 
 docker run \
     --rm \
+    --label "$connor:dev-server" \
+    -e "LOG_LEVEL=$LOG_LEVEL" \
     -v "$connor":/app \
     -v "/app/.venv" \
     -p 8000:8000 \
