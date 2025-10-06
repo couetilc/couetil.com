@@ -1,0 +1,43 @@
+# Resume stage - rebuild with correct public URL
+FROM resume:latest AS resume
+RUN ./cli.js build --public-url /resume/
+
+# Build stage
+FROM node:22.14.0-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source files
+COPY . .
+
+# Build the Astro site
+RUN npm run build
+
+# Production stage
+FROM node:22.14.0-alpine AS runtime
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --omit=dev
+
+# Copy built site from builder
+COPY --from=builder /app/dist ./dist
+
+# Copy resume dist to a subdirectory
+COPY --from=resume /app/dist ./dist/resume
+
+# Expose port
+EXPOSE 4321
+
+# Start the preview server
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
