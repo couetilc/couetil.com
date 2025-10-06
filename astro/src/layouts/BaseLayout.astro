@@ -1,0 +1,33 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "couetil.com", description = "About Connor Couetil" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <meta name="description" content={description}>
+    <meta name="keywords" content="couetil, connor, software engineering, web development, full-stack developer, cloud software consulting, javascript">
+    <link rel="preload" href="/fonts_Rubik-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts_subset-Bungee-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="stylesheet" type="text/css" href="/index.css">
+    <title>{title}</title>
+  </head>
+  <body>
+    <pre hidden>
+    high above the earth
+    floating on a flowing cloud
+    my digital life
+    (todo: publish time)
+    </pre>
+    <slot />
+  </body>
+</html>
