@@ -1,3 +1,20 @@
+# Development stage
+FROM node:22.14.0-alpine AS development
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Expose port
+EXPOSE 4321
+
+# Start dev server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
 # Resume stage - rebuild with correct public URL
 FROM resume:latest AS resume
 RUN ./cli.js build --public-url /resume/

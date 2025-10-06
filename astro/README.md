@@ -1,43 +1,74 @@
-# Astro Starter Kit: Minimal
+# couetil.com
 
+Personal website built with [Astro](https://astro.build).
+
+## Development
+
+This project uses Docker for both development and production. The resume is embedded from a separate Docker image (`resume:latest`) during production builds.
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/)
+- [direnv](https://direnv.net/) (optional, but recommended)
+
+### Setup
+
+If using direnv:
 ```sh
-npm create astro@latest -- --template minimal
+direnv allow
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+This adds `bin/` to your PATH, enabling the convenience scripts below.
 
-## 🚀 Project Structure
+### Commands
 
-Inside of your Astro project, you'll see the following folders and files:
+| Command | Action |
+| :------ | :----- |
+| `dev` | Start development server with hot reload at `localhost:4321` |
+| `build` | Build production Docker image |
+| `run` | Run production server at `localhost:4321` |
+| `stop` | Stop all running containers |
+
+Without direnv, prefix commands with `bin/` (e.g., `bin/dev`).
+
+### Development Workflow
+
+**For rapid iteration:**
+```sh
+dev
+```
+This runs the Astro dev server in a container with your source files mounted. Changes appear immediately without rebuilding.
+
+**To test production builds:**
+```sh
+build
+run
+```
+This builds the full production image including the resume integration, then runs it.
+
+## Project Structure
 
 ```text
 /
-├── public/
+├── bin/              # Development scripts
+├── public/           # Static assets (CSS, images)
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── components/   # Astro components
+│   ├── layouts/      # Page layouts
+│   └── pages/        # Routes (*.astro files)
+├── Dockerfile        # Multi-stage build (dev + prod)
+├── docker-compose.yml
+├── docker-compose.dev.yml
+└── .envrc            # direnv configuration
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Production Build
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+The production build:
+1. Pulls the `resume:latest` Docker image
+2. Rebuilds the resume with `--public-url /resume/`
+3. Builds the Astro site
+4. Copies the resume dist to `/resume/` in the final image
+5. Serves everything with `npm run preview`
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+The resume is accessible at `/resume/` when running the production build.

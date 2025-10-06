@@ -219,4 +219,46 @@ import Nav from '../components/Nav.astro';
     </div>
 
   </section>
+
+  <script>
+    // link highlight animation
+
+    function throttle(fn: (...args: any[]) => void, interval = 200) {
+      let lastTime = 0;
+      return function (...args: any[]) {
+        const now = Date.now();
+        if (now - lastTime >= interval) {
+          lastTime = now;
+          fn.apply(null, args);
+        }
+      };
+    }
+    function nextColor() {
+      const colors = [
+        'rgba(79, 163, 217, 0.3)',
+        'rgba(122, 169, 116, 0.3)',
+        'rgba(242, 92, 84, 0.3)',
+        'rgba(214, 168, 79, 0.3)',
+        'rgba(162, 103, 172, 0.3)',
+      ];
+      let i = 0;
+      return () => {
+        const c = colors[i];
+        i = (i + 1) % colors.length;
+        return c;
+      }
+    }
+    (function () {
+      const next = nextColor();
+      document.querySelector('nav')!
+        .style.setProperty('--highlight-color', next());
+      const navLinks = document.querySelectorAll('.nav-item a');
+      navLinks.forEach(item => {
+        item.addEventListener('mouseenter', throttle(() => {
+          document.querySelector('nav')!
+            .style.setProperty('--highlight-color', next());
+        }));
+      })
+    })();
+  </script>
 </BaseLayout>
