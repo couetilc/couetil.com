@@ -1,13 +1,13 @@
 # Reference to existing Cloudflare zone
 data "cloudflare_zone" "couetil_com" {
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 }
 
 # Zone Configuration
 # Note: DNSSEC is currently disabled for this zone
 # Uncomment to enable DNSSEC management
 # resource "cloudflare_zone_dnssec" "couetil_com" {
-# 	zone_id = var.cloudflare_zone_id
+# 	zone_id = data.external.cloudflare_secrets.result.zone_id
 # }
 
 # DNS Records
@@ -19,7 +19,7 @@ resource "cloudflare_dns_record" "acm_validation_couetil_com" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -31,7 +31,7 @@ resource "cloudflare_dns_record" "acm_validation_connor_couetil_com" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -43,7 +43,7 @@ resource "cloudflare_dns_record" "acm_validation_www_couetil_com" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -56,7 +56,7 @@ resource "cloudflare_dns_record" "connor_couetil_com" {
 	proxied = true
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -68,7 +68,7 @@ resource "cloudflare_dns_record" "couetil_com" {
 	proxied = true
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -80,7 +80,7 @@ resource "cloudflare_dns_record" "www_couetil_com" {
 	proxied = true
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -94,7 +94,7 @@ resource "cloudflare_dns_record" "fastmail_dkim_1" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -107,7 +107,7 @@ resource "cloudflare_dns_record" "fastmail_dkim_2" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -120,7 +120,7 @@ resource "cloudflare_dns_record" "fastmail_dkim_3" {
 	proxied = false
 	ttl     = 1
 	type    = "CNAME"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {
 		flatten_cname = false
 	}
@@ -135,7 +135,7 @@ resource "cloudflare_dns_record" "fastmail_mx_1" {
 	proxied  = false
 	ttl      = 1
 	type     = "MX"
-	zone_id  = var.cloudflare_zone_id
+	zone_id  = data.external.cloudflare_secrets.result.zone_id
 	settings = {}
 }
 
@@ -147,7 +147,7 @@ resource "cloudflare_dns_record" "fastmail_mx_2" {
 	proxied  = false
 	ttl      = 1
 	type     = "MX"
-	zone_id  = var.cloudflare_zone_id
+	zone_id  = data.external.cloudflare_secrets.result.zone_id
 	settings = {}
 }
 
@@ -158,7 +158,7 @@ resource "cloudflare_dns_record" "google_site_verification" {
 	proxied = false
 	ttl     = 1
 	type    = "TXT"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {}
 }
 
@@ -169,6 +169,6 @@ resource "cloudflare_dns_record" "fastmail_spf" {
 	proxied = false
 	ttl     = 1
 	type    = "TXT"
-	zone_id = var.cloudflare_zone_id
+	zone_id = data.external.cloudflare_secrets.result.zone_id
 	settings = {}
 }

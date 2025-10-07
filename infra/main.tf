@@ -32,7 +32,7 @@ provider "aws" {
 }
 
 provider "cloudflare" {
-	api_token = var.cloudflare_api_token
+	api_token = data.external.cloudflare_secrets.result.api_token
 }
 
 resource "aws_s3_bucket" "tf_couetil_com" {

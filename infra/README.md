@@ -12,14 +12,9 @@ This directory contains Terraform configuration for managing the couetil.com inf
 
 ## Setup
 
-### Environment Variables
+### Secrets Management
 
-The `.envrc` file at the root of the repository loads credentials from 1Password:
-
-```bash
-export CLOUDFLARE_API_TOKEN="$(op read "op://couetil.com/config/cloudflare/api_token")"
-export CLOUDFLARE_ZONE_ID="$(op read "op://couetil.com/config/cloudflare/zone_id")"
-```
+Cloudflare credentials are automatically fetched from 1Password at runtime using the `external` data source in `secrets.tf`. This eliminates the need for environment variables or tfvars files.
 
 ### Terraform Initialization
 
@@ -30,20 +25,14 @@ cd infra
 
 ### Running Terraform Commands
 
-All terraform commands require variables to be passed. The easiest way is to source the `.envrc` file:
+Terraform automatically fetches Cloudflare secrets from 1Password using the `external` data source. Just run:
 
 ```bash
-source ../.envrc
-./terraform plan -var="cloudflare_api_token=$CLOUDFLARE_API_TOKEN" -var="cloudflare_zone_id=$CLOUDFLARE_ZONE_ID"
-./terraform apply -var="cloudflare_api_token=$CLOUDFLARE_API_TOKEN" -var="cloudflare_zone_id=$CLOUDFLARE_ZONE_ID"
+terraform plan
+terraform apply
 ```
 
-Or use a terraform.tfvars file (not committed to git):
-
-```hcl
-cloudflare_api_token = "your-token-here"
-cloudflare_zone_id   = "your-zone-id-here"
-```
+The secrets are fetched at runtime via the `op` CLI tool.
 
 ## Cloudflare Management
 
@@ -96,11 +85,7 @@ cf-terraforming generate --resource-type cloudflare_dns_record
 cf-terraforming import --resource-type cloudflare_dns_record
 
 # Run the import commands
-source ../.envrc
-./terraform import -var="cloudflare_api_token=$CLOUDFLARE_API_TOKEN" \
-  -var="cloudflare_zone_id=$CLOUDFLARE_ZONE_ID" \
-  cloudflare_dns_record.example \
-  <zone_id>/<record_id>
+terraform import cloudflare_dns_record.example <zone_id>/<record_id>
 ```
 
 ## AWS Resources
