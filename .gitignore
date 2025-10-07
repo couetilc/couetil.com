@@ -20,3 +20,5 @@ override.tf.json
 .terraformrc
 terraform.rc
 # end terraform
+
+.claude

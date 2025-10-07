@@ -4,6 +4,10 @@ terraform {
 			source = "hashicorp/aws"
 			version = "~> 5.0"
 		}
+		cloudflare = {
+			source = "cloudflare/cloudflare"
+			version = "~> 5.0"
+		}
 		external = {
 			source = "hashicorp/external"
 			version = "~> 2.0"
@@ -25,6 +29,10 @@ provider "aws" {
 			service = "www.couetil.com"
 		}
 	}
+}
+
+provider "cloudflare" {
+	api_token = var.cloudflare_api_token
 }
 
 resource "aws_s3_bucket" "tf_couetil_com" {
