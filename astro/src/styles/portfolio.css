@@ -31,10 +31,10 @@ nav .nav-item {
   height: 1em;
   z-index: -1;
   clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.3s ease-out;
+  transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   transform: translateY(65%) translateX(.75em) scaleX(1.75) scaleY(3);
-  will-change: transform;
+  will-change: clip-path;
 }
 
 .nav-item:hover .highlight {
@@ -83,9 +83,9 @@ nav .nav-item {
   height: 10%;
   z-index: 0;
   clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.3s ease-out;
+  transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  will-change: transform;
+  will-change: clip-path;
   transform: translate(-50%, -50%) scaleX(4.5) scaleY(12);
   transform-origin: center;
 }
