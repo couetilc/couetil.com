@@ -1,7 +1,0 @@
-services:
-  web:
-    build: .
-    ports:
-      - "4321:4321"
-    stdin_open: true
-    tty: true

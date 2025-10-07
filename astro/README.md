@@ -28,6 +28,7 @@ This adds `bin/` to your PATH, enabling the convenience scripts below.
 | `build` | Build production Docker image |
 | `run` | Run production server at `localhost:4321` |
 | `stop` | Stop all running containers |
+| `deploy` | Deploy to production (S3 + CloudFront) |
 
 Without direnv, prefix commands with `bin/` (e.g., `bin/dev`).
 
@@ -72,3 +73,48 @@ The production build:
 5. Serves everything with `npm run preview`
 
 The resume is accessible at `/resume/` when running the production build.
+
+## Deployment
+
+Deploy the site to production (S3 + CloudFront):
+
+```sh
+deploy
+```
+
+### What the deploy script does:
+
+1. **Dependency check** - Verifies docker, aws-cli, and terraform are installed
+2. **Get infrastructure info** - Fetches S3 bucket and CloudFront distribution ID from Terraform outputs
+3. **Build** - Creates production Docker image and extracts the `dist/` folder
+4. **Upload to S3** - Syncs files with appropriate cache headers:
+   - Static assets (JS, CSS, images): 1 year cache
+   - HTML/XML: 5 minute cache
+5. **Invalidate CloudFront** - Creates cache invalidation for immediate updates
+
+### Prerequisites for deployment:
+
+- **Docker** - For building the production site
+- **AWS CLI** - Configured with valid credentials (`aws configure`)
+- **Terraform** - Infrastructure must be deployed first (in `../infra/`)
+
+### First-time setup:
+
+1. Deploy infrastructure:
+   ```sh
+   cd ../infra
+   terraform apply
+   ```
+
+2. Configure AWS credentials:
+   ```sh
+   aws configure
+   ```
+
+3. Deploy the site:
+   ```sh
+   cd ../astro
+   deploy
+   ```
+
+The site will be available at `https://connor.couetil.com` after CloudFront invalidation completes (usually 2-5 minutes).
