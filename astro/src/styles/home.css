@@ -15,9 +15,12 @@
   top: 0;
   right: 0;
   bottom: 0;
+  perspective: 1200px;
+  perspective-origin: center center;
 }
 #background * {
   /* Removed transition - now using requestAnimationFrame for smooth animation */
+  transform-style: preserve-3d;
 }
 #background img {
   min-height: 100%;

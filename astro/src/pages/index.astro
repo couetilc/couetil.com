@@ -140,18 +140,22 @@ import '../styles/home.css';
     let mouseCurrent = { x: 0, y: 0 };
     let lastPosition = { x: 0, y: 0, time: 0 };
     let velocity = 0;
-    let currentScale = 1.5;  // Start at ground level (zoomed in)
-    let targetScale = 1.5;
+    let currentScale = 1.6;  // Start at ground level (zoomed in)
+    let targetScale = 1.6;
+    let currentRotation = { x: 0, y: 0 };
+    let targetRotation = { x: 0, y: 0 };
 
     // Animation parameters (tunable)
-    const BASE_SCALE = 1.5;           // Maximum scale when stationary (ground level)
-    const MIN_SCALE = 1.0;            // Minimum scale at high velocity (high altitude)
+    const BASE_SCALE = 1.6;           // Maximum scale when stationary (ground level) - increased for 3D rotation
+    const MIN_SCALE = 1.1;            // Minimum scale at high velocity (high altitude) - increased for 3D rotation
     const VELOCITY_TO_SCALE = 0.5;    // How much velocity affects scale (lower = more gradual)
     const POSITION_DAMPING = 0.08;    // Lower = smoother position (0.05-0.15)
     const SCALE_DAMPING = 0.04;       // Lower = smoother scale changes (more gradual)
     const VELOCITY_SMOOTHING = 0.15;  // How quickly velocity adjusts (lower = smoother acceleration)
     const VELOCITY_DECAY = 0.85;      // How quickly velocity decays when not moving
     const PARALLAX_STRENGTH = 80;     // Maximum pixel offset from center
+    const MAX_ROTATION = 8;           // Maximum rotation angle in degrees (tilt/banking effect)
+    const ROTATION_DAMPING = 0.06;    // Lower = smoother rotation changes
 
     // Get the background image element
     const bgImg = document.querySelector('#background img') as HTMLElement;
@@ -200,6 +204,17 @@ import '../styles/home.css';
       targetScale = BASE_SCALE - velocityScale;  // Subtract to zoom out when moving fast
       currentScale += (targetScale - currentScale) * SCALE_DAMPING;
 
+      // Calculate 3D rotation based on mouse position (banking/tilt effect)
+      const normX = (mouseCurrent.x - centerX) / (width / 2);
+      const normY = (mouseCurrent.y - centerY) / (height / 2);
+
+      targetRotation.y = normX * MAX_ROTATION;     // Horizontal movement = Y-axis rotation (yaw)
+      targetRotation.x = -normY * MAX_ROTATION;    // Vertical movement = X-axis rotation (pitch, inverted)
+
+      // Smoothly interpolate rotation
+      currentRotation.x += (targetRotation.x - currentRotation.x) * ROTATION_DAMPING;
+      currentRotation.y += (targetRotation.y - currentRotation.y) * ROTATION_DAMPING;
+
       // Calculate parallax offset (inverted direction)
       const offsetX = -((mouseCurrent.x - centerX) / centerX) * PARALLAX_STRENGTH;
       const offsetY = -((mouseCurrent.y - centerY) / centerY) * PARALLAX_STRENGTH;
@@ -217,8 +232,13 @@ import '../styles/home.css';
         const clampedX = Math.max(-maxTranslateX, Math.min(maxTranslateX, offsetX));
         const clampedY = Math.max(-maxTranslateY, Math.min(maxTranslateY, offsetY));
 
-        // Apply transform
-        bgImg.style.transform = `translate(${clampedX}px, ${clampedY}px) scale(${currentScale})`;
+        // Apply 3D transform with rotation, translation, and scale
+        bgImg.style.transform = `
+          rotateX(${currentRotation.x}deg)
+          rotateY(${currentRotation.y}deg)
+          translate(${clampedX}px, ${clampedY}px)
+          scale(${currentScale})
+        `.replace(/\s+/g, ' ').trim();
       }
 
       requestAnimationFrame(animate);
