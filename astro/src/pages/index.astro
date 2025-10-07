@@ -133,45 +133,98 @@ import '../styles/home.css';
   </script>
 
   <script>
-    // satellite image animation
+    // satellite image animation with velocity-based altitude
 
-    function throttle(cb: (...args: any[]) => void, { interval = 0, queue = true }: { interval?: number, queue?: boolean }) {
-      let tid: number | undefined;
-      let invoked = new Date().getTime();
-      return (...arg: any[]) => {
-        clearTimeout(tid);
-        const now = new Date().getTime();
-        if ((now - invoked) > interval) {
-          invoked = now;
-          cb(...arg);
-        } else if (queue) {
-          tid = setTimeout(cb, interval, ...arg);
+    // Animation state
+    let mouseTarget = { x: 0, y: 0 };
+    let mouseCurrent = { x: 0, y: 0 };
+    let lastPosition = { x: 0, y: 0, time: 0 };
+    let velocity = 0;
+    let currentScale = 1.5;  // Start at ground level (zoomed in)
+    let targetScale = 1.5;
+
+    // Animation parameters (tunable)
+    const BASE_SCALE = 1.5;           // Maximum scale when stationary (ground level)
+    const MIN_SCALE = 1.0;            // Minimum scale at high velocity (high altitude)
+    const VELOCITY_TO_SCALE = 0.5;    // How much velocity affects scale (lower = more gradual)
+    const POSITION_DAMPING = 0.08;    // Lower = smoother position (0.05-0.15)
+    const SCALE_DAMPING = 0.04;       // Lower = smoother scale changes (more gradual)
+    const VELOCITY_SMOOTHING = 0.15;  // How quickly velocity adjusts (lower = smoother acceleration)
+    const VELOCITY_DECAY = 0.85;      // How quickly velocity decays when not moving
+    const PARALLAX_STRENGTH = 80;     // Maximum pixel offset from center
+
+    // Get the background image element
+    const bgImg = document.querySelector('#background img') as HTMLElement;
+    const bgPicture = document.querySelector('#background') as HTMLElement;
+
+    // Track mouse position
+    document.addEventListener('mousemove', (event: MouseEvent) => {
+      mouseTarget.x = event.clientX;
+      mouseTarget.y = event.clientY;
+    });
+
+    // Animation loop
+    function animate() {
+      const now = performance.now();
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Smoothly interpolate current position toward target
+      mouseCurrent.x += (mouseTarget.x - mouseCurrent.x) * POSITION_DAMPING;
+      mouseCurrent.y += (mouseTarget.y - mouseCurrent.y) * POSITION_DAMPING;
+
+      // Calculate velocity
+      if (lastPosition.time > 0) {
+        const deltaTime = now - lastPosition.time;
+        const deltaX = mouseCurrent.x - lastPosition.x;
+        const deltaY = mouseCurrent.y - lastPosition.y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const instantVelocity = deltaTime > 0 ? distance / deltaTime : 0;
+
+        // Smooth velocity with acceleration factor (gradual changes)
+        velocity += (instantVelocity - velocity) * VELOCITY_SMOOTHING;
+
+        // Apply decay when slowing down
+        if (instantVelocity < velocity) {
+          velocity *= VELOCITY_DECAY;
         }
       }
-    }
 
-    function swingBackground (maxSkew = 0, options: { selector?: string, dirX?: number, dirY?: number } = {}) {
-      const { selector = 'body', dirX = 1, dirY = 1 } = options;
-      return (event: MouseEvent) => {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const origin = [ Math.floor(width / 2), Math.floor(height / 2)];
-        const mouse_x = event.clientX;
-        const mouse_y = event.clientY;
-        const perc_skew_x = dirX * (mouse_x - origin[0]) / origin[0]
-        const perc_skew_y = dirY * (mouse_y - origin[1]) / origin[1]
-        const skew_x = maxSkew * perc_skew_x;
-        const skew_y = maxSkew * perc_skew_y;
-        document.querySelectorAll(selector).forEach(el => {
-          // eslint-disable-next-line no-param-reassign
-          (el as HTMLElement).style.transform = `translate(${skew_x}px, ${skew_y}px) scale(1.25)`;
-        });
+      // Update last position
+      lastPosition = { x: mouseCurrent.x, y: mouseCurrent.y, time: now };
+
+      // Map velocity to scale (altitude) - INVERTED: high velocity = zoom OUT (high altitude)
+      const velocityScale = Math.min(velocity * VELOCITY_TO_SCALE, BASE_SCALE - MIN_SCALE);
+      targetScale = BASE_SCALE - velocityScale;  // Subtract to zoom out when moving fast
+      currentScale += (targetScale - currentScale) * SCALE_DAMPING;
+
+      // Calculate parallax offset (inverted direction)
+      const offsetX = -((mouseCurrent.x - centerX) / centerX) * PARALLAX_STRENGTH;
+      const offsetY = -((mouseCurrent.y - centerY) / centerY) * PARALLAX_STRENGTH;
+
+      // Edge containment: calculate safe translation bounds
+      if (bgImg && bgPicture) {
+        const imgRect = bgImg.getBoundingClientRect();
+        const imgWidth = imgRect.width / currentScale;  // Original size before transform
+        const imgHeight = imgRect.height / currentScale;
+
+        const maxTranslateX = Math.max(0, (imgWidth * currentScale - width) / 2);
+        const maxTranslateY = Math.max(0, (imgHeight * currentScale - height) / 2);
+
+        // Clamp translations to safe bounds
+        const clampedX = Math.max(-maxTranslateX, Math.min(maxTranslateX, offsetX));
+        const clampedY = Math.max(-maxTranslateY, Math.min(maxTranslateY, offsetY));
+
+        // Apply transform
+        bgImg.style.transform = `translate(${clampedX}px, ${clampedY}px) scale(${currentScale})`;
       }
+
+      requestAnimationFrame(animate);
     }
 
-    document.addEventListener('mousemove', throttle(
-      swingBackground(100, { selector: '#background img', dirX: -1, dirY: -1 }),
-      { interval: 100 }
-    ));
+    // Start animation loop
+    requestAnimationFrame(animate);
   </script>
 </BaseLayout>
