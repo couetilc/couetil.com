@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-deno test --allow-run --allow-net --allow-write --allow-read cli.test.ts
