@@ -1,0 +1,265 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import '../styles/portfolio.css';
+---
+
+<BaseLayout title="Portfolio">
+
+  <section id="portfolio">
+    <Nav currentPath="/portfolio" />
+
+    <div class="portfolio-items">
+
+      <!-- TODO some type of "click to expand" for the preview images -->
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(160, 32, 240, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            Couetil.com
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Personal website built from a public GitHub repo
+        </h2>
+        <a class="portfolio-item-preview" href="https://github.com/couetilc/couetil.com">
+          <img src="/img_couetilcom.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>
+            Docker, Astro, AWS, Terraform, Ansible
+          </li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(233, 68, 116, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            react-social-icons
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Maintain an Open-Source React.js package on NPM with 20,000+
+          weekly downloads and +400 stars
+        </h2>
+        <a class="portfolio-item-preview" href="https://github.com/couetilc/react-social-icons">
+          <img src="/img_reactsocialicons.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>Prepared v5 and v6 releases, closing +75 issues and +60 pull requests, accummulating +400 GitHub stars and +20,000 weekly downloads.</li>
+          <li>Reduced bundlesize by +95% by transparently implementing code-splitting using Rollup</li>
+          <li>Committed to API stability, full coverage testing of API surface and no breaking changes.</li>
+          <li>Designed new icons using <a href="https://inkscape.org/">Inkscape</a> and updated documentation for contributors.</li>
+          <li>Created CI/CD pipeline with <a href="https://github.com/features/actions">GitHub Actions</a> for testing contributions and publishing releases.</li>
+          <li><a href="https://github.com/couetilc/react-social-icons">GitHub Repo</a> and <a href="https://www.npmjs.com/package/react-social-icons">NPM Package</a>.</li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(221, 184, 74, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            resume
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          My open-source résumé, built using web technologies
+        </h2>
+        <a class="portfolio-item-preview" href="https://github.com/couetilc/resume">
+          <img src="/img_resume.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>
+            Styled with <a href="https://sass-lang.com/">SASS</a> and uses
+            <a href="https://webpack.js.org/">Webpack</a> to compile all
+            assets as an HTML bundle. <a href="https://github.com/puppeteer/puppeteer">Puppeteer</a>
+            then renders the résumé as a PDF. Convenient container definition using <a href="https://www.docker.com/">Docker</a>.
+          </li>
+          <li>
+            <a href="https://github.com/couetilc/resume">GitHub Repo</a> and <a href="https://npmjs.com/package/cc-resume">NPM Package</a>.
+          </li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(36, 150, 237, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            caddy-gen
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Open-source project using Caddy web server released on DockerHub
+          and GitHub
+        </h2>
+        <a class="portfolio-item-preview" href="https://github.com/couetilc/caddy-gen">
+          <img src="/img_caddygen.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>
+            Proxies requests and pulls TLS certificates for Docker services by
+            generating a <a href="https://caddyserver.com/docs/caddyfile">Caddyfile</a>
+            using <a href="https://github.com/jwilder/docker-gen">docker-gen</a>
+            and <a href="https://golang.org/pkg/text/template/">Go templates</a>.
+          </li>
+          <li>
+            Pushed features upstream, closing several issues and pull
+            requests while adding tests, updating documentation, and fixing
+            the <a href="https://www.travis-ci.com/">Travis CI</a> pipeline.
+          </li>
+          <li>
+            <a href="https://github.com/couetilc/caddy-gen">GitHub Repo</a> and <a href="https://hub.docker.com/r/couetilc/caddy-gen">DockerHub Repo</a>.
+          </li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(84, 172, 72, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            EquineLungExperts.com
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Designed responsive website enabling clients to request services from
+          veterinarians
+        </h2>
+        <a class="portfolio-item-preview" href="https://equinelungexperts.com">
+          <img src="/img_equinelungexperts.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>Designed using <a href="https://www.sketch.com/">Sketch</a> and styled with <a href="https://sass-lang.com/">SASS</a>.</li>
+          <li>Wrote marketing copy, created logo and other graphics.</li>
+          <li>
+            <a href="https://nextjs.org/">Next.js</a> powered <a href="https://reactjs.org/">React</a>
+            front-end served by <a href="https://aws.amazon.com/cloudfront/">AWS Cloudfront</a>
+            with CI/CD using <a href="https://github.com/features/actions">GitHub actions</a>.
+          </li>
+          <li><a href="https://equinelungexperts.com">Website URL</a> and <a href="https://github.com/couetilc/equine-lung-experts">GitHub Repo</a>.</li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(86, 192, 167, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            aws-transcribe-audio
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Open-source software to automatically transcribe audio files added
+          to AWS S3 buckets
+        </h2>
+        <a class="portfolio-item-preview" href="https://github.com/couetilc/aws-transcribe-audio">
+          <img src="/img_awstranscribe.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>
+            Created for a podcast owner who wanted quick, cheap transcripts
+            for their episodes.
+          </li>
+          <li>
+            Go binary orchestrating AWS services (S3, Transcribe) targeting AWS
+            Lambda runtime using Docker.
+          </li>
+          <li>
+            Thorough documentation and CLI methods organized by
+            <a href="https://www.gnu.org/software/make/manual/make.html">Makefile</a>
+            to install, update, and remove the project from a specified AWS
+            account.
+          </li>
+          <li><a href="https://github.com/couetilc/aws-transcribe-audio">GitHub Repo</a></li>
+        </ul>
+      </div>
+
+      <div class="portfolio-item">
+        <svg class="highlight" style="fill: rgba(222, 155, 97, 0.25);" viewBox="0 0 70 10" xmlns="http://www.w3.org/2000/svg"> <path d="M 6.385552,4.63936 C 11.480969,4.181 16.60105,4.05285 21.712758,3.90865 32.7606,3.73846 43.81028,3.79264 54.85913,3.73137 c 0,0 -4.70209,-3.39869 -4.70209,-3.39869 v 0 C 46.62391,0.48992 44.46506,0.59986 40.86904,0.6987 33.02731,0.91426 25.18129,0.87207 17.338653,0.7307 11.556415,0.57934 5.769901,0.42675 0,0 Z" pathLength="200" /></svg>
+        <h1 class="portfolio-item-heading">
+          <div>
+            Babblenauts
+          </div>
+        </h1>
+        <h2 class="portfolio-item-subheading">
+          Winner of "Most Inspirational" Hackathon project at NASA SpaceApps
+          2018 in NYC
+        </h2>
+        <a class="portfolio-item-preview" href="https://2018.spaceappschallenge.org/challenges/universe-beauty-and-wonder/virtual-space-exploration/teams/babblenauts/project">
+          <img src="/img_babblenauts.jpg">
+        </a>
+        <ul class="portfolio-item-summary">
+          <li>
+            Voice control interface for <a href="https://www.openspaceproject.com/">OpenSpace</a>, an open-source C++ project
+            for visualizing the known universe and satellite data.
+          </li>
+          <li>
+            Came up with initial idea, designed React.js front-end for
+            controlling the interface, and implemented
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API">Speech Recognition API</a>.
+          </li>
+          <li><a href="https://github.com/couetilc/spaceapps2018">GitHub Repo</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+  </section>
+
+  <script>
+    // link highlight animation
+
+    function throttle(fn: (...args: any[]) => void, interval = 200) {
+      let lastTime = 0;
+      return function (...args: any[]) {
+        const now = Date.now();
+        if (now - lastTime >= interval) {
+          lastTime = now;
+          fn.apply(null, args);
+        }
+      };
+    }
+    function nextColor() {
+      const colors = [
+        'rgba(79, 163, 217, 0.3)',
+        'rgba(122, 169, 116, 0.3)',
+        'rgba(242, 92, 84, 0.3)',
+        'rgba(214, 168, 79, 0.3)',
+        'rgba(162, 103, 172, 0.3)',
+      ];
+      let i = 0;
+      return () => {
+        const c = colors[i];
+        i = (i + 1) % colors.length;
+        return c;
+      }
+    }
+    function randomRotation() {
+      return (Math.random() - 0.5) * 4; // Random angle between -2 and 2 degrees
+    }
+    (function () {
+      const next = nextColor();
+      document.querySelector('nav')!
+        .style.setProperty('--highlight-color', next());
+      const navLinks = document.querySelectorAll('.nav-item a');
+      navLinks.forEach(item => {
+        item.addEventListener('mouseenter', throttle(() => {
+          document.querySelector('nav')!
+            .style.setProperty('--highlight-color', next());
+        }));
+      });
+
+      // Add random rotation to portfolio item highlights
+      const portfolioItems = document.querySelectorAll('.portfolio-item');
+      portfolioItems.forEach(item => {
+        const highlight = item.querySelector('.highlight') as HTMLElement;
+        if (highlight) {
+          item.addEventListener('mouseenter', () => {
+            const rotation = randomRotation();
+            highlight.style.transform = `translate(-50%, -50%) scaleX(4.5) scaleY(12) rotate(${rotation}deg)`;
+          });
+        }
+      });
+    })();
+  </script>
+</BaseLayout>

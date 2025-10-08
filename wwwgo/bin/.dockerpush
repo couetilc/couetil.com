@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-aws ecr get-login-password --region us-east-1 \
- | docker login --username AWS --password-stdin 073298609415.dkr.ecr.us-east-1.amazonaws.com
-
-docker tag $docker_image:latest 073298609415.dkr.ecr.us-east-1.amazonaws.com/$docker_image:latest
-
-docker push 073298609415.dkr.ecr.us-east-1.amazonaws.com/$docker_image:latest

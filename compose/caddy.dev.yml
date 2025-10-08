@@ -1,8 +1,0 @@
-version: "3.3"
-services:
-  caddy-gen:
-    restart: "no"
-    volumes:
-      - ../caddy/Caddyfile_dev:/tmp/Caddyfile_dev
-    environment:
-      CADDY_SNIPPET: /tmp/Caddyfile_dev

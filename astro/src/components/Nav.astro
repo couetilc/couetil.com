@@ -1,0 +1,48 @@
+---
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath } = Astro.props;
+const showPortfolio = !currentPath?.startsWith('/portfolio');
+const showAbout = !currentPath?.startsWith('/about');
+---
+
+<header>
+  <a href="/">
+    <h1>
+      Connor Couetil
+    </h1>
+  </a>
+  <nav>
+    {showPortfolio && (
+      <span class="nav-item">
+        <a href="/portfolio/">
+          Portfolio
+        </a>
+      </span>
+    )}
+    {showAbout && (
+      <span class="nav-item">
+        <a href="/about/">
+          About
+        </a>
+      </span>
+    )}
+    <span class="nav-item">
+      <a href="/resume/">
+        Resume
+      </a>
+    </span>
+    <span class="nav-item">
+      <a href="https://github.com/couetilc">
+        <img src="/img_GitHub-Mark-32px.png" alt="GitHub">
+      </a>
+    </span>
+    <span class="nav-item">
+      <a href="https://linkedin.com/in/connorcouetil">
+        <img src="/img_LI-In-Bug.png" alt="LinkedIn">
+      </a>
+    </span>
+  </nav>
+</header>

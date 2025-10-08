@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-container_id="$(docker ps --filter ancestor="$docker_image" --format "{{.ID}}")"
-
-docker logs -f "$container_id"

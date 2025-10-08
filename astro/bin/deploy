@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Change to repo root
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+echo -e "${BLUE}=== Astro Site Deployment ===${NC}\n"
+
+# Check dependencies
+echo -e "${YELLOW}Checking dependencies...${NC}"
+
+MISSING_DEPS=()
+
+if ! command -v docker &> /dev/null; then
+  MISSING_DEPS+=("docker - https://docs.docker.com/get-docker/")
+fi
+
+if ! command -v aws &> /dev/null; then
+  MISSING_DEPS+=("aws-cli - https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html")
+fi
+
+if ! command -v terraform &> /dev/null; then
+  MISSING_DEPS+=("terraform - https://developer.hashicorp.com/terraform/install")
+fi
+
+if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
+  echo -e "${RED}Error: Missing required dependencies:${NC}"
+  for dep in "${MISSING_DEPS[@]}"; do
+    echo -e "  ${RED}✗${NC} $dep"
+  done
+  exit 1
+fi
+
+echo -e "${GREEN}✓ All dependencies installed${NC}\n"
+
+# Get infrastructure outputs
+echo -e "${YELLOW}Fetching infrastructure configuration...${NC}"
+cd "$REPO_ROOT/infra"
+
+S3_BUCKET_NAME=$(terraform output -raw s3_bucket_name 2>/dev/null || echo "")
+CLOUDFRONT_DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
+
+if [ -z "$S3_BUCKET_NAME" ] || [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+  echo -e "${RED}Error: Could not get Terraform outputs${NC}"
+  echo -e "${YELLOW}Make sure you've run 'terraform apply' in the infra/ directory${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}✓ S3 Bucket: $S3_BUCKET_NAME${NC}"
+echo -e "${GREEN}✓ CloudFront Distribution: $CLOUDFRONT_DISTRIBUTION_ID${NC}\n"
+
+# Build the Astro site
+echo -e "${YELLOW}Building Astro site with Docker...${NC}"
+cd "$REPO_ROOT/astro"
+
+docker build --target runtime -t astro-production:latest .
+
+# Extract dist folder
+echo -e "${YELLOW}Extracting built site...${NC}"
+rm -rf dist
+CONTAINER_ID=$(docker create astro-production:latest)
+docker cp ${CONTAINER_ID}:/app/dist ./dist
+docker rm ${CONTAINER_ID}
+
+echo -e "${GREEN}✓ Build complete${NC}\n"
+
+# Check AWS credentials
+echo -e "${YELLOW}Checking AWS credentials...${NC}"
+if ! aws sts get-caller-identity &>/dev/null; then
+  echo -e "${RED}Error: AWS credentials not configured or expired${NC}"
+  echo -e "${YELLOW}Run 'aws configure' or check your credentials${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ AWS credentials valid${NC}\n"
+
+# Deploy to S3
+echo -e "${YELLOW}Deploying to S3...${NC}"
+
+# Upload assets with long cache (1 year)
+aws s3 sync dist/ s3://${S3_BUCKET_NAME}/ \
+  --delete \
+  --cache-control "public,max-age=31536000,immutable" \
+  --exclude "*.html" \
+  --exclude "*.xml" \
+  --exclude "*.txt"
+
+# Upload HTML/XML with shorter cache (5 minutes)
+aws s3 sync dist/ s3://${S3_BUCKET_NAME}/ \
+  --cache-control "public,max-age=300" \
+  --exclude "*" \
+  --include "*.html" \
+  --include "*.xml" \
+  --include "*.txt"
+
+echo -e "${GREEN}✓ S3 sync complete${NC}\n"
+
+# Invalidate CloudFront cache
+echo -e "${YELLOW}Invalidating CloudFront cache...${NC}"
+INVALIDATION_ID=$(aws cloudfront create-invalidation \
+  --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
+  --paths "/*" \
+  --query 'Invalidation.Id' \
+  --output text)
+
+echo -e "${GREEN}✓ Cache invalidation created: ${INVALIDATION_ID}${NC}\n"
+
+echo -e "${GREEN}${BLUE}=== Deployment Complete! ===${NC}"
+echo -e "${YELLOW}Note: CloudFront invalidation may take a few minutes to propagate.${NC}"

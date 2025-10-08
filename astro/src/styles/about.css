@@ -1,0 +1,50 @@
+body {
+  background-color: white;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+header {
+  border-bottom: 2px solid black;
+}
+
+section#about {
+  width: 100%;
+  max-width: 760px;
+  line-height: 1.4em;
+  padding: 0 .5em;
+}
+
+nav .nav-item {
+  margin: 0 .5em;
+}
+
+.about-interests, .about-i-do {
+  text-align: center;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+
+.about-interests ul, .about-i-do ul {
+  padding: 0;
+  margin: 0;
+}
+
+.about-interests li, .about-i-do li {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+}
+
+.about-container > div {
+  flex: 0 1 50%;
+  min-width: 15em;
+}

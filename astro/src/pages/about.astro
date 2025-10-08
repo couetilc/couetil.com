@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import '../styles/about.css';
+---
+
+<BaseLayout title="About">
+
+  <section id="about">
+    <Nav currentPath="/about" />
+    <p>
+      The <a href="/sat_R60m_output80_nosharp.jpg">background image</a> on my
+      home page tracks the Bay Area and is a
+      <a href="https://sentinel.esa.int/web/sentinel/missions/sentinel-2">Sentinel-2</a>
+      satellite image sourced from <a href="https://registry.opendata.aws/sentinel-2/">AWS S3</a>.
+    </p>
+    <p>
+      This website is Open-Source, <a href="https://github.com/couetilc/couetil.com">check it out on GitHub</a>.
+    </p>
+    <p>
+      Reach out if you'd like to play tennis and I'm in your area.
+    </p>
+      <div class="about-container">
+        <div class="about-i-do">
+          <h2>Skills</h2>
+          <ul>
+            <li>Software Development</li>
+            <li>Infrastructure Automation</li>
+            <li>Cloud Services Management</li>
+          </ul>
+        </div>
+        <div class="about-interests">
+          <h2>Interests</h2>
+          <ul>
+            <li>User Interfaces</li>
+            <li>Virtualization</li>
+            <li>Testing</li>
+            <li>DevOps</li>
+            <li>Networking</li>
+          </ul>
+        </div>
+      </div>
+  </section>
+</BaseLayout>

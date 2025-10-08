@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-deno run --allow-net --allow-read --allow-write cli.ts --port 3000 --db 'db/auth.db'

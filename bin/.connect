@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-if ! .vpn is_up; then
-	echo 'Bringing up VPN...'
-	.vpn up
-	trap 'echo "Bringing down VPN..."; .vpn down' EXIT
-fi
-
-ssh ec2-user@10.0.0.1 $@
