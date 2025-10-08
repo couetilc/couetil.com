@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker compose up
+docker run -p 4321:4321 couetil-astro:runtime

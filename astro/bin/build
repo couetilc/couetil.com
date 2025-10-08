@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker compose build
+# Enable BuildKit for better caching and parallelization
+export DOCKER_BUILDKIT=1
+
+# Build all targets in parallel
+docker buildx build -t couetil-astro:development --target development . &
+docker buildx build -t couetil-astro:builder --target builder . &
+docker buildx build -t couetil-astro:runtime --target runtime . &
+
+# Wait for all builds to complete
+wait
