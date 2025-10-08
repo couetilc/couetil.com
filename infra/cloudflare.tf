@@ -25,18 +25,6 @@ resource "cloudflare_dns_record" "acm_validation_couetil_com" {
 	}
 }
 
-resource "cloudflare_dns_record" "acm_validation_connor_couetil_com" {
-	content = "_ba91ca7496ace81b93f11254fecae7fe.nfyddsqlcy.acm-validations.aws"
-	name    = "_a6332122f935060816bd69d84e2989dd.connor.couetil.com"
-	proxied = false
-	ttl     = 1
-	type    = "CNAME"
-	zone_id = data.external.cloudflare_secrets.result.zone_id
-	settings = {
-		flatten_cname = false
-	}
-}
-
 resource "cloudflare_dns_record" "acm_validation_www_couetil_com" {
 	content = "_a2508035ddf1392ffb4d268ada5d11b8.nfyddsqlcy.acm-validations.aws"
 	name    = "_c3e4da8dbcf9e64d2c5e18135b0cd188.www.couetil.com"
@@ -50,18 +38,18 @@ resource "cloudflare_dns_record" "acm_validation_www_couetil_com" {
 }
 
 # Site CNAMEs
-resource "cloudflare_dns_record" "connor_couetil_com" {
-	content = aws_cloudfront_distribution.website.domain_name
-	name    = "connor.couetil.com"
-	proxied = false
-	ttl     = 1
-	type    = "CNAME"
-	zone_id = data.external.cloudflare_secrets.result.zone_id
-	settings = {
-		flatten_cname = false
-	}
-}
-
+# resource "cloudflare_dns_record" "connor_couetil_com" {
+# 	content = aws_cloudfront_distribution.website.domain_name
+# 	name    = "connor.couetil.com"
+# 	proxied = false
+# 	ttl     = 1
+# 	type    = "CNAME"
+# 	zone_id = data.external.cloudflare_secrets.result.zone_id
+# 	settings = {
+# 		flatten_cname = false
+# 	}
+# }
+#
 resource "cloudflare_dns_record" "couetil_com" {
 	content = "temporary-couetil-com.pages.dev"
 	name    = "couetil.com"

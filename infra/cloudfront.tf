@@ -43,6 +43,7 @@ resource "aws_cloudfront_distribution" "website" {
   comment             = "www.couetil.com static website"
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe edge locations
+  aliases             = ["connor.couetil.com"]
 
   # Access logging configuration
   logging_config {
@@ -101,11 +102,9 @@ resource "aws_cloudfront_distribution" "website" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
-    # To use custom domain, add:
-    # acm_certificate_arn      = aws_acm_certificate.cert.arn
-    # ssl_support_method       = "sni-only"
-    # minimum_protocol_version = "TLSv1.2_2021"
+    acm_certificate_arn      = data.aws_acm_certificate.website.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = {
