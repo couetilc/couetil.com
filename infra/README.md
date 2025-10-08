@@ -4,11 +4,11 @@ This directory contains Terraform configuration for managing the couetil.com inf
 
 ## Prerequisites
 
-- Terraform (installed locally as `./terraform`)
+- Terraform CLI (`terraform` available on your PATH)
 - [1Password CLI](https://developer.1password.com/docs/cli/) - for secrets management
-- [direnv](https://direnv.net/) - for loading environment variables from `.envrc`
 - AWS credentials configured
 - Cloudflare API token with DNS edit permissions
+- Optional: [direnv](https://direnv.net/) if you prefer to manage environment variables
 
 ## Setup
 
@@ -20,7 +20,7 @@ Cloudflare credentials are automatically fetched from 1Password at runtime using
 
 ```bash
 cd infra
-./terraform init
+terraform init
 ```
 
 ### Running Terraform Commands
