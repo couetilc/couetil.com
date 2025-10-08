@@ -34,7 +34,6 @@ nav .nav-item {
   transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   transform: translateY(65%) translateX(.75em) scaleX(1.75) scaleY(3);
-  will-change: clip-path;
 }
 
 .nav-item:hover .highlight {
@@ -89,8 +88,7 @@ nav .nav-item {
     transform 1s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.6s ease-out;
   pointer-events: none;
-  will-change: clip-path, transform;
-  transform: translate(-50%, -50%) scaleX(4.5) scaleY(12);
+  transform: translate(-50%, -50%) scaleX(2.5) scaleY(4);
   transform-origin: center;
 }
 
