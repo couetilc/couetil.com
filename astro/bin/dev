@@ -6,4 +6,5 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "$REPO_ROOT"
 
+export COMPOSE_BAKE=true
 docker compose -f docker-compose.dev.yml up --build --remove-orphans "$@"
