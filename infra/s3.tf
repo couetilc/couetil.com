@@ -32,6 +32,14 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "website" {
   }
 }
 
+# Enable S3 access logging
+resource "aws_s3_bucket_logging" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  target_bucket = aws_s3_bucket.logs.id
+  target_prefix = "s3-access/"
+}
+
 # Bucket policy to allow CloudFront OAC access
 resource "aws_s3_bucket_policy" "website" {
   bucket = aws_s3_bucket.website.id

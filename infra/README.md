@@ -118,6 +118,76 @@ aws ec2 describe-images \
 	--query 'sort_by(Images, &CreationDate)[].Name'
 ```
 
+## Logging and Monitoring
+
+This infrastructure includes comprehensive logging and monitoring:
+
+### Logs
+
+All logs are stored in the `logs.couetil.com` S3 bucket with automatic lifecycle management:
+- **Retention**: 90 days total (30 days Standard, 30 days Infrequent Access, 30 days Glacier)
+- **CloudFront Access Logs**: `s3://logs.couetil.com/cloudfront/`
+- **S3 Access Logs**: `s3://logs.couetil.com/s3-access/`
+
+### CloudWatch Alarms
+
+The following alarms are configured:
+
+**Performance & Errors:**
+- CloudFront 4xx error rate >5% (2 consecutive 5-minute periods)
+- CloudFront 5xx error rate >1% (2 consecutive 5-minute periods)
+- CloudFront origin latency >1 second
+
+**Billing:**
+- Monthly spend thresholds: $10, $25, $50
+
+### Setting Up Alert Notifications
+
+After running `terraform apply`, subscribe to SNS topics to receive alerts:
+
+```bash
+# Get the SNS topic ARNs from Terraform outputs
+terraform output sns_alerts_topic_arn
+terraform output sns_billing_alerts_topic_arn
+
+# Subscribe to performance/error alerts
+aws sns subscribe \
+  --topic-arn $(terraform output -raw sns_alerts_topic_arn) \
+  --protocol email \
+  --notification-endpoint your@email.com
+
+# Subscribe to billing alerts
+aws sns subscribe \
+  --topic-arn $(terraform output -raw sns_billing_alerts_topic_arn) \
+  --protocol email \
+  --notification-endpoint your@email.com
+
+# Confirm the subscription by clicking the link in the email AWS sends
+```
+
+You can also use the convenience script:
+
+```bash
+./subscribe-to-alerts.sh your@email.com
+```
+
+**Important**: Billing alarms require enabling billing alerts in AWS Console:
+1. Go to AWS Billing → Billing Preferences
+2. Enable "Receive Billing Alerts"
+
+### Viewing Logs
+
+```bash
+# List recent CloudFront logs
+aws s3 ls s3://logs.couetil.com/cloudfront/ --recursive | tail -20
+
+# Download and view a specific log file
+aws s3 cp s3://logs.couetil.com/cloudfront/EXAMPLE.gz - | gunzip | less
+
+# List S3 access logs
+aws s3 ls s3://logs.couetil.com/s3-access/
+```
+
 ## State Management
 
 Terraform state is stored in an S3 bucket (`tf.couetil.com`) with versioning enabled. The state file is managed by the backend configuration in `main.tf`.
