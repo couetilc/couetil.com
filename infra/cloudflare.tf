@@ -38,18 +38,18 @@ resource "cloudflare_dns_record" "acm_validation_www_couetil_com" {
 }
 
 # Site CNAMEs
-# resource "cloudflare_dns_record" "connor_couetil_com" {
-# 	content = aws_cloudfront_distribution.website.domain_name
-# 	name    = "connor.couetil.com"
-# 	proxied = false
-# 	ttl     = 1
-# 	type    = "CNAME"
-# 	zone_id = data.external.cloudflare_secrets.result.zone_id
-# 	settings = {
-# 		flatten_cname = false
-# 	}
-# }
-#
+resource "cloudflare_dns_record" "connor_couetil_com" {
+	content = aws_cloudfront_distribution.website.domain_name
+	name    = "connor.couetil.com"
+	proxied = false
+	ttl     = 1
+	type    = "CNAME"
+	zone_id = data.external.cloudflare_secrets.result.zone_id
+	settings = {
+		flatten_cname = false
+	}
+}
+
 resource "cloudflare_dns_record" "couetil_com" {
 	content = "temporary-couetil-com.pages.dev"
 	name    = "couetil.com"
