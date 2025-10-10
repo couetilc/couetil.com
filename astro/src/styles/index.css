@@ -88,8 +88,6 @@ nav {
   flex-flow: row nowrap;
   align-items: center;
   padding-top: .25em;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 420px) {
