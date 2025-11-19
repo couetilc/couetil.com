@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import '../../styles/blog.css';
+
+const allPosts = await getCollection('blog');
+const publishedPosts = allPosts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+---
+
+<BaseLayout title="Blog - Connor Couetil" description="Articles and thoughts on software engineering">
+  <section id="blog">
+    <Nav currentPath="/blog" />
+
+    <h1>Blog</h1>
+
+    {publishedPosts.length === 0 ? (
+      <p>No posts yet. Check back soon!</p>
+    ) : (
+      <div class="posts-list">
+        {publishedPosts.map((post) => (
+          <article class="post-preview">
+            <h2>
+              <a href={`/blog/${post.slug}/`}>{post.data.title}</a>
+            </h2>
+            <time datetime={post.data.pubDate.toISOString()}>
+              {formatDate(post.data.pubDate)}
+            </time>
+            <p>{post.data.description}</p>
+          </article>
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>

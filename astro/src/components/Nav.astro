@@ -6,6 +6,7 @@ interface Props {
 const { currentPath } = Astro.props;
 const showPortfolio = !currentPath?.startsWith('/portfolio');
 const showAbout = !currentPath?.startsWith('/about');
+const showBlog = !currentPath?.startsWith('/blog');
 ---
 
 <header>
@@ -26,6 +27,13 @@ const showAbout = !currentPath?.startsWith('/about');
       <span class="nav-item">
         <a href="/about/">
           About
+        </a>
+      </span>
+    )}
+    {showBlog && (
+      <span class="nav-item">
+        <a href="/blog/">
+          Blog
         </a>
       </span>
     )}
