@@ -1,25 +1,3 @@
-body {
-  background-color: white;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-}
-
-header {
-  border-bottom: 2px solid black;
-}
-
-section#about {
-  width: 100%;
-  max-width: 760px;
-  line-height: 1.4em;
-  padding: 0 .5em;
-}
-
-nav .nav-item {
-  margin: 0 .5em;
-}
-
 .about-interests, .about-i-do {
   text-align: center;
   display: flex;

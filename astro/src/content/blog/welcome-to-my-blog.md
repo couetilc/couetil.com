@@ -2,7 +2,7 @@
 title: 'Creating QEMU images'
 description: 'Creating a Virtual Machine image for test runs of my faas platform using QEMU and cloud-init'
 pubDate: 2025-11-19
-draft: true
+draft: false
 ---
 
 Today we're creating QEMU images and configuring them using cloud-init, all to
@@ -71,6 +71,8 @@ I had been missing the UEFI, so QEMU was just hanging (TODO: explain the issue, 
 File has to start with "#cloud-config" or something bad happens.
 
 Go through the user-data file and explain what is going on.
+
+the `sudo: ['ALL=(ALL) NOPASSWD:ALL ...']` you need to trigger shutdown in non-interactive as a user (by running `sudo shutdown`, otherwise running `shutdown` without `sudo` will cause the vm to prompt for sudo password, which will fail in non-interactive mode). Would also be good to describe the syntax of this statement "ALL=(ALL)" etc it's weird.
 
 ### meta-data
 

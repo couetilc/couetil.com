@@ -1,28 +1,5 @@
 /* Page Layout */
 
-body {
-  background-color: white;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-}
-
-section#portfolio {
-  width: 100%;
-  max-width: 760px;
-  line-height: 1.4em;
-  padding: 0 .5em;
-}
-
-header {
-  border-bottom: 2px solid black;
-}
-
-nav .nav-item {
-  margin: 0 .5em;
-  position: relative;
-}
-
 .highlight {
   position: absolute;
   bottom: 0;
@@ -34,10 +11,6 @@ nav .nav-item {
   transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   transform: translateY(65%) translateX(.75em) scaleX(1.75) scaleY(3);
-}
-
-.nav-item:hover .highlight {
-  clip-path: inset(0 0 0 0);
 }
 
 .portfolio-items {

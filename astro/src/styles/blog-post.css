@@ -1,33 +1,10 @@
-body {
-  background-color: white;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-}
-
-header {
-  border-bottom: 2px solid black;
-}
-
-section#blog-post {
-  width: 100%;
-  max-width: 760px;
-  line-height: 1.6em;
-  padding: 0 .5em;
-}
-
-nav .nav-item {
-  margin: 0 .5em;
-}
-
 article {
   margin-bottom: 3em;
 }
 
 .post-header {
-  margin: 2em 0;
-  padding-bottom: 1em;
-  border-bottom: 1px solid #e0e0e0;
+  margin: 1em 0;
+  padding-top: 1em;
 }
 
 .post-header h1 {
