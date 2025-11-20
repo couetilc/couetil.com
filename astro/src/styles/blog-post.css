@@ -1,5 +1,6 @@
 article {
   margin-bottom: 3em;
+  font-family: Bitter, system-ui;
 }
 
 .post-header {
@@ -11,7 +12,7 @@ article {
   margin: 0 0 0.5em 0;
   font-size: 2em;
   line-height: 1.2;
-  font-family: Rubik, system-ui;
+  font-family: Bitter, system-ui;
 }
 
 .post-header time {
