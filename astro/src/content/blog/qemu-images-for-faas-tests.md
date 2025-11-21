@@ -5,17 +5,120 @@ pubDate: 2025-11-19
 draft: false
 ---
 
-Today we're creating QEMU images and configuring them using cloud-init, all to
+Today I'm creating QEMU images and configuring them using cloud-init, all to
 create a virtual machine image to run the test suite for "faas", my educational
 implementation of a function-as-a-service platform.
 
-## Blog Content TODO
+### Cloud-init and Ubuntu cloud image
 
-### cloud-init and Ubuntu cloud image
+I'm going to use Ubuntu cloud images for our virtual machines. They come with
+cloud-init already installed, and skip any desktop installation steps, perfect
+for the server application I'm developing.
 
-- Download ubuntu cloud image from their release page
-- If I run this directly using QEMU, it hangs after "Started systemd-timedated.service" on "Job systemd-networkd-wait-online.se…ice/start running (56s / no limit)"
-- Have to cloud-init to create a user, for some reason, then the systemd init finishes and I get the login prompt.
+You can download the release at https://cloud-images.ubuntu.com/. I'm using
+the "noble" release, and I'm running these VMs on an M1 Mac so I'll select an
+arm64 architecture.
+
+```sh
+curl -fsSL -o ubuntu.img "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img"
+```
+
+I noticed that if you boot up the VM without cloud-init configuration files the
+initialization hangs after `Started systemd-timedated.service` at `Job
+systemd-networkd-wait-online.service/start running`. Not sure why, but let's
+define the cloud-init files and bootstrap the VM.
+
+There are two files to create:
+- `user-data`: "cloud-config" style YAML that declaritively configures the VM.
+- `meta-data`: per-instance details for configuration (instance-id, local-hostname)
+
+Cloud-init has templating built in, where key-values from a JSON object in a
+[`instance-data` file] are interpolated into a final user-data configuration
+file from a Jinja-templated user-data file. I don't have a complex
+configuration for this image, nor do I plan to generate variations on this
+user-data configuration, so I won't template the file. 
+
+[`instance-data` file]: https://cloudinit.readthedocs.io/en/latest/explanation/instancedata.html#instance-data 'Cloud-init instance-data'
+
+I'll start by mentioning the `meta-data` file. This is required by cloud-init,
+and is usually fetched from a cloud-provider's metadata system that manages
+on-platform VMs. Since we're running this locally, we'll manually define
+it.
+
+```yaml
+instance-id: faasvm-test-runner
+local-hostname: faasvm
+```
+
+The `instance-id` is required. Cloud-init uses it to know if the virtual
+machine has been initialized already. If the `instance-id` matches what is
+stored on the VM's disk at `/var/lib/cloud/data/instance-id`, cloud-init
+skips running per-instance modules from the user-data config (identified by
+["Module Frequency" in the docs]).
+
+Let's turn to the user-data configuration. Cloud-init supports a lot of
+different [user-data formats], we're using the ["cloud-config" format]. The
+file MUST start with `#cloud-config` to distinguish it to cloud-init's parser.
+
+["Module Frequency" in the docs]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html 'Cloud-init Module Reference'
+[user-data formats]: https://cloudinit.readthedocs.io/en/latest/explanation/format.html#user-data-formats 'Cloud-init user-data formats'
+["cloud-config" format]: https://cloudinit.readthedocs.io/en/latest/explanation/about-cloud-config.html 'About "cloud-config" user-data format'
+
+```yaml
+#cloud-config
+hostname: faasvm
+package_update: true
+package_upgrade: false
+write_files:
+  - path: /usr/local/bin/setup.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y --no-install-recommends ca-certificates curl git openssh-client python3 python3-pip python3-venv rsync
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+      install -m 0755 -o root -g root /root/.local/bin/uv /usr/local/bin/uv
+runcmd:
+  - /usr/local/bin/setup.sh
+  - rm -f /usr/local/bin/setup.sh
+power_state:
+  mode: poweroff
+  delay: now
+users:
+  - default
+  - name: faas_user
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/poweroff, /sbin/reboot']
+    ssh_authorized_keys:
+```
+
+The VM is simple. It's meant to run our test suite, that's it, so we'll make
+sure to install `uv` (our package manager for Python) and any of its
+dependencies. We'll also be using `rsync` to copy our project source code and
+test files into the VM, and `ssh` to send commands to the VM.
+
+I'd like to call out a couple cloud-init modules: ["power_state"] and ["users"].
+
+"power_state" runs after all other modules have finished and handles shutdown
+and reboot. I'm initializing a virtual machine image so I can create overlay
+images for test suite runs, so I want the VM to immediately exit when its done
+initializing, signaling the base image is ready. So, I set it to "poweroff", "now",
+which will cause QEMU's emulator process to exit without delay when cloud-init
+finishes.
+
+"users" gives me an opportunity to define permissions for the VM user that I'll
+run our test suite under. I haven't discussed the security policy or threat
+model for this project, but I'll avoid giving the user membership in the "sudo"
+group, except for the ability trigger a shutdown over SSH. Finally,
+ssh_authorized_keys let's me specify the SSH keypair I'll use to connect to the
+running instance. I generate them separately from the VM, and `cat` the public
+key to the end of the `user-data` config when I create the `seed.iso` with the
+cloud-init seed data created by `cloud-localds` (touched on later).
+
+["power_state"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Power State Change'
+["users"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Users and Groups'
 
 ### qemu-system-aarch64
 
@@ -59,8 +162,11 @@ It has a virtual size and a disk size. The virtual size was set by running
 image only takes 591MiB. So we can set total limits on VM storage use without
 paying the cost of pre-allocation on the host, which is not the case for raw disk images like .iso.
 
-todo:
-- what changed from qcow to qcow2?
+The old qcow v1 format is deprecated. qcow2 introduced a new header format and
+better snapshot features. There was an extension to qcow2 some years after it
+was introduced (originally called qcow3) that added optional header extensions,
+enabling compression, encryption, improved snapshot performance, and
+single-host cluster management.
 
 ### qemu-img create
 
@@ -94,10 +200,11 @@ images, and they're enabled by the qcow2 format. Let's take a look how.
 
 ### qcow2 header
 
-Each qcow2 file has a clearly defined [header
-format](https://www.qemu.org/docs/master/interop/qcow2.html). For each overlay
-image to only contain the differences between itself and a base image (called a
+Each qcow2 file has a clearly defined [header format]. For each overlay image
+to only contain the differences between itself and a base image (called a
 backing image by QEMU), it stores the path to the backing image in the file.
+
+[header format]: https://www.qemu.org/docs/master/interop/qcow2.html 'QEMU qcow2 header format'
 
 Bytes 8-15 describe the offset into the image where the backing image name is
 stored, and bytes 16-19 store the size of the backing file name in bytes. The
