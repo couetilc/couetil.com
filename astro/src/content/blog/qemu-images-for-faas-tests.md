@@ -109,16 +109,21 @@ which will cause QEMU's emulator process to exit without delay when cloud-init
 finishes.
 
 "users" gives me an opportunity to define permissions for the VM user that I'll
-run our test suite under. I haven't discussed the security policy or threat
+run the test suite under. I haven't discussed the security policy or threat
 model for this project, but I'll avoid giving the user membership in the "sudo"
-group, except for the ability trigger a shutdown over SSH. Finally,
-ssh_authorized_keys let's me specify the SSH keypair I'll use to connect to the
-running instance. I generate them separately from the VM, and `cat` the public
-key to the end of the `user-data` config when I create the `seed.iso` with the
-cloud-init seed data created by `cloud-localds` (touched on later).
+group, except for the ability trigger a shutdown over SSH. Without that
+[sudoers rule], running `shutdown` over SSH will provoke a password prompt for
+the password-less user. Finally, ssh_authorized_keys let's me specify the SSH
+keypair I'll use to connect to the running instance. I generate them separately
+from the VM, and `cat` the public key to the end of the `user-data` config when
+I create the `seed.iso` with the cloud-init seed data created by
+`cloud-localds` (touched on later). The `instance-data` file format I mentioned
+earlier is a great way to interpolate public keys into your cloud-init config,
+but sometimes messy is fun 😄.
 
 ["power_state"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Power State Change'
 ["users"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Users and Groups'
+[sudoers rule]: https://www.sudo.ws/docs/man/sudoers.man/ 'Sudoers Manual'
 
 ### qemu-system-aarch64
 
@@ -136,7 +141,7 @@ Modern QEMU images are in qcow2 format. That stands for "QEMU Copy-on-Write 2",
 where copy-on-write means storage is not reserved ahead of time and is only
 allocated when needed. You can observe this by examing our Ubuntu image:
 
-```console
+```shellsession
 $ qemu-img info vm/ubuntu.img
 image: vm/ubuntu.img
 file format: qcow2
@@ -159,12 +164,12 @@ Child node '/file':
 
 It has a virtual size and a disk size. The virtual size was set by running
 `qemu-img resize ubuntu.img +20G` on Canonical's release distribution, but the
-image only takes 591MiB. So we can set total limits on VM storage use without
+image only takes 591MiB on-disk. So we can set total limits on VM storage use without
 paying the cost of pre-allocation on the host, which is not the case for raw disk images like .iso.
 
 The old qcow v1 format is deprecated. qcow2 introduced a new header format and
 better snapshot features. There was an extension to qcow2 some years after it
-was introduced (originally called qcow3) that added optional header extensions,
+was introduced (originally called qcow3, identified with `compat: 1.1` in the image info) that added optional header extensions,
 enabling compression, encryption, improved snapshot performance, and
 single-host cluster management.
 
@@ -188,7 +193,7 @@ image, our ubuntu.img release from Canonical, and simply copy it (`cp
 ubuntu.img test_run.img`) before each test. Voilà, a fresh OS for each run.
 However, revisiting our distinction between virtual size and disk size, we're
 copying the bytes on disk so our disk usage will double from 591MiB to >1Gib.
-Plus we have to pay the cost to write 591MiB to disk. It's better than paying
+Plus we have to pay the time cost (IOPS) to write 591MiB to disk. It's better than paying
 the pre-allocation cost for raw image formats, but can we do better?
 
 Looking closely, there is no difference between the base image and the derived
@@ -219,7 +224,7 @@ qemu-img create -f qcow2 -B qcow2 -b ubuntu.img test_run.img
 qemu-img info test_run.img
 ```
 
-```
+```shellsession
 image: test_run.img
 file format: qcow2
 virtual size: 23.5 GiB (25232932864 bytes)
@@ -258,8 +263,8 @@ And try to run our overlay image
 ```sh
 qemu-system-aarch64 -bios "$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd" -accel hvf -cpu host -machine virt,highmem=on -smp 4 -m 4096 -display none -serial stdio -drive if=virtio,format=qcow2,file=test.img -nic user,model=virtio-net-pci
 ```
-```console
-qemu-system-aarch64: -drive if=virtio,format=qcow2,file=test.img: Could not open backing file: Could not open 'test_runner.img': No such file or directory
+```shellsession
+qemu-system-aarch64: -drive if=virtio,format=qcow2,file=test.img: Could not open backing file: Could not open 'ubuntu.img': No such file or directory
 ```
 
 We get an error that QEMU can't find the backing file. So, anytime we make overlay images, we need the base image to be accessible by QEMU to run them.
