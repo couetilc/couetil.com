@@ -80,25 +80,36 @@ article {
 
 .post-content code {
   background-color: #f5f5f5;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  font-size: 0.9em;
-  font-family: 'Courier New', Courier, monospace;
 }
 
 .post-content pre {
-  margin: 1.5em 0;
-  padding: 1em;
+  --pre-padding: 1em;
+  padding: var(--pre-padding);
   overflow-x: auto;
-  border-radius: 5px;
+  border-radius: .25em;
   line-height: 1.4;
+
+  /* approximate width-to-height ratio for my monospace font */
+  --ratio-font-w-to-h: .6025;
+  /* width of code block within its padded container */
+  --code-block-width: calc(var(--readable-width) - 2 * var(--pre-padding));
+  /* font-sizes for maximum columns of monospace characters on a single line */
+  --code-size-col80: calc(
+    var(--code-block-width) / 80 / var(--ratio-font-w-to-h)
+  );
+  --code-size-col90: calc(
+    var(--code-block-width) / 90 / var(--ratio-font-w-to-h)
+  );
+  --code-size-col100: calc(
+    var(--code-block-width) / 100 / var(--ratio-font-w-to-h)
+  );
 }
 
 .post-content pre code {
   background-color: transparent;
   padding: 0;
   border-radius: 0;
-  font-size: 0.9em;
+  font-size: var(--code-size-col80);
 }
 
 .post-footer {
