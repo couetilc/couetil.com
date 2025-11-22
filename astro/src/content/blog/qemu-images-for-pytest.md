@@ -1,12 +1,12 @@
 ---
-title: 'Creating QEMU images for test runs'
+title: 'Creating QEMU images for pytest'
 description: 'Creating a Virtual Machine image for test runs of my faas platform using QEMU and cloud-init'
 pubDate: 2025-11-19
 draft: false
 ---
 
 Today I'm creating QEMU images and configuring them using cloud-init, all to
-create a virtual machine image to run the test suite for "faas", my educational
+create a virtual machine image to run the pytest suite for "faas", my educational
 implementation of a function-as-a-service platform.
 
 ### Cloud-init and Ubuntu cloud image
@@ -94,7 +94,7 @@ users:
     ssh_authorized_keys:
 ```
 
-The VM is simple. It's meant to run our test suite, that's it, so we'll make
+The VM is simple. It's meant to run our pytest suite, that's it, so we'll make
 sure to install `uv` (our package manager for Python) and any of its
 dependencies. We'll also be using `rsync` to copy our project source code and
 test files into the VM, and `ssh` to send commands to the VM.
@@ -103,17 +103,17 @@ I'd like to call out a couple cloud-init modules: ["power_state"] and ["users"].
 
 "power_state" runs after all other modules have finished and handles shutdown
 and reboot. I'm initializing a virtual machine image so I can create overlay
-images for test suite runs, so I want the VM to immediately exit when its done
+images for pytest runs, so I want the VM to immediately exit when its done
 initializing, signaling the base image is ready. So, I set it to "poweroff", "now",
 which will cause QEMU's emulator process to exit without delay when cloud-init
 finishes.
 
 "users" gives me an opportunity to define permissions for the VM user that I'll
-run the test suite under. I haven't discussed the security policy or threat
+run the tests as. I haven't discussed the security policy or threat
 model for this project, but I'll avoid giving the user membership in the "sudo"
 group, except for the ability trigger a shutdown over SSH. Without that
 [sudoers rule], running `shutdown` over SSH will provoke a password prompt for
-the password-less user. Finally, ssh_authorized_keys let's me specify the SSH
+the _password-less_ user. Finally, ssh_authorized_keys let's me specify the SSH
 keypair I'll use to connect to the running instance. I generate them separately
 from the VM, and `cat` the public key to the end of the `user-data` config when
 I create the `seed.iso` with the cloud-init seed data created by
@@ -219,12 +219,9 @@ specification limits this to 1023 characters.
 
 Let's take a look at the `qemu-img info` for an overlay image. Here's the command to make a overlay image from a backing image:
 
-```sh
-qemu-img create -f qcow2 -B qcow2 -b ubuntu.img test_run.img
-qemu-img info test_run.img
-```
-
 ```shellsession
+$ qemu-img create -f qcow2 -B qcow2 -b ubuntu.img test_run.img
+$ qemu-img info test_run.img
 image: test_run.img
 file format: qcow2
 virtual size: 23.5 GiB (25232932864 bytes)

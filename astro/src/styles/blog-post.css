@@ -15,8 +15,17 @@ article {
   font-family: Bitter, system-ui;
 }
 
-.post-header time {
-  display: block;
+.post-header a {
+  text-decoration: underline;
+}
+
+.post-header-metadata {
+  display: flex;
+  gap: 1em;
+  align-items: baseline;
+}
+
+.post-header-metadata * {
   font-size: 0.9em;
   color: #666;
 }

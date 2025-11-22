@@ -35,14 +35,23 @@ function formatDate(date: Date): string {
   <article>
     <header class="post-header">
       <h1>{post.data.title}</h1>
-      <time datetime={post.data.pubDate.toISOString()}>
-        {formatDate(post.data.pubDate)}
-      </time>
-      {post.data.updatedDate && (
-        <div class="updated-date">
-          Updated: {formatDate(post.data.updatedDate)}
-        </div>
-      )}
+      <div class="post-header-metadata">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {formatDate(post.data.pubDate)}
+        </time>
+        {post.data.updatedDate && (
+          <div class="updated-date">
+            Updated: {formatDate(post.data.updatedDate)}
+          </div>
+        )}
+        <a
+          rel="alternate"
+          type="text/markdown"
+          href="https://raw.githubusercontent.com/couetilc/couetil.com/refs/heads/main/astro/src/content/blog/qemu-images-for-faas-tests.md"
+        >
+          Markdown Link
+        </a>
+      </div>
     </header>
 
     <div class="post-content">

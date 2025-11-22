@@ -9,7 +9,6 @@ export default defineConfig({
       themes: {
         light: 'aurora-x', // dark theme
         light: 'monokai', // light theme backup
-        light: 'andromeeda', // light theme (I like this, but no console highlighting)
         light: 'github-dark-high-contrast', // light theme
       },
       wrap: true,
