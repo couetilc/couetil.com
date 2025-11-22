@@ -40,6 +40,7 @@ EOT
 resource "aws_cloudfront_distribution" "website" {
   enabled             = true
   is_ipv6_enabled     = true
+  http_version        = "http3"
   comment             = "www.couetil.com static website"
   default_root_object = "index.html"
   price_class         = "PriceClass_100" # Use only North America and Europe edge locations
