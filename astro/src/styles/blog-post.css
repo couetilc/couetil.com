@@ -80,6 +80,9 @@ article {
 
 .post-content code {
   background-color: #f5f5f5;
+  padding: 0.125rem 0.375rem;
+  border-radius: .175rem;
+  font-size: 0.9rem;
 }
 
 .post-content pre {

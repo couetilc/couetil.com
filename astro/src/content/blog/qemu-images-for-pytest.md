@@ -77,7 +77,8 @@ write_files:
       set -euo pipefail
       export DEBIAN_FRONTEND=noninteractive
       apt-get update
-      apt-get install -y --no-install-recommends ca-certificates curl git openssh-client python3 python3-pip python3-venv rsync
+      apt-get install -y --no-install-recommends ca-certificates curl git \
+        openssh-client python3 python3-pip python3-venv rsync
       curl -LsSf https://astral.sh/uv/install.sh | sh
       install -m 0755 -o root -g root /root/.local/bin/uv /usr/local/bin/uv
 runcmd:
@@ -175,7 +176,7 @@ test runs, we introduce a source non-determinism to our test suite, which may
 cause false-positives, false-negatives, or flaky tests.
 
 How can we address this? Our goal is to run our test suite in the same
-environment each time, and build a set of assertions on-top of this stable
+environment each time, and build a set of assertions on top of this stable
 foundation to verify program correctness. One solution is to have a clean
 image, our ubuntu.img release from Canonical, and simply copy it (`cp
 ubuntu.img test_run.img`) before each test. Voilà, a fresh OS for each run.
@@ -254,14 +255,119 @@ qemu-system-aarch64: -drive if=virtio,format=qcow2,file=test.img: Could not open
 
 We get an error that QEMU can't find the backing file. So, anytime we make overlay images, we need the base image to be accessible by QEMU to run them.
 
-## cloud-localds and seed.iso 
+## TODO: how does copy-on-write work?
 
-seed.iso contains the user-data and meta-data I think.
+It's the clusters, L1 and L2, and how the overlay's L1 and L2 point to the
+backing's L1 and L2, which points to its backing L1 and L2, etc.
 
-Explain what it is. It's just a bash script.
+## cloud-localds and seed images
 
-Had to run it in Docker, because MacOS uses another utility for creating iso
-(those are CD-rom files, maybe explain?)
+The overlay image is backed by the Ubuntu release image, and I'll apply the
+project's specific configuration to this overlay. I can then re-use the
+initialized test runner overlay image for test run instance images we can
+discard or debug.
+
+How do I initialize the overlay image? I've already describe the desired
+configuration of the VM in the `user-data` section above, but I haven't applied
+it to any image. In order to do that, I have to make the `user-data` and
+`meta-data` files available to cloud-init at boot-up time. This strategy has
+two steps. First, store the configuration files inside a separate raw image.
+Second, mount that raw image when you boot the VM for the first time using
+QEMU. Cloud-init should then read them, perform initialization, and shutdown
+the VM, leaving it in the desired state.
+
+The raw image containing our `user-data` and `meta-data` files is typically
+called a seed image. This image contains static read-only files and is not meant to
+be written to, so there is no point in using a qcow2 format.
+
+A convenient utility [`cloud-localds`] is used to make seed images for
+cloud-init. It's [distributed] and [maintained] by Canonical. The utility is
+simple, mostly handling different permutations of options: what disk format for
+the image, the filesystem choice, or specifying a remote metadata provider. My
+need is simple and the defaults work well, so I will focus on the core
+functionality.
+
+`cloud-localds` creates a temporary directory and copies over the `user-data`
+and `meta-data` files. It then uses `genisoimage` to create our raw image using
+the following command:
+
+```sh
+# "$img" is the final image file, it will contain the files specified by
+# the ${files[@]} array
+genisoimage \
+  -output "$img" \
+  -volid cidata \
+  -joliet -rock \
+  "${files[@]}" # ("$tmp_dir/user-data", "$tmp_dir/meta-data")
+```
+
+The key option is `-volid cidata`, which sets the ISO volume label to `cidata`.
+Cloud-init uses this label to find the configuration files at boot-time.
+First, cloud-init enumerates all block devices and checks their labels. Raw
+images (ISO9660) store the labels starting at sector 16 of the image (sectors
+are fixed data segments 2048 bytes in length). `-joliet` and `-rock` are
+extensions to the ISO9660 format that are not enabled by default for
+compatibility reasons, even though they're both over thirty years old at this
+point. They are not strictly necessary for this use-case, but nothing is lost
+by enabling the flags.
+
+(Fun fact, the `-rock` extension is called "Rock Ridge
+Interchange Protocol", and is named after the town in [Mel Brook's "Blazing
+Saddles"], one of the funniest movies of all time.)
+
+[Mel Brook's "Blazing Saddles"]: https://en.wikipedia.org/wiki/Blazing_Saddles 'Wikipedia: Blazing Saddles'
+
+Now that I've explained how the `cloud-localds` command works, I'll run it to
+create the seed.iso image. `cloud-localds` only runs on Linux and I'm on MacOS,
+so I will run it in a docker container and mount the needed files.
+
+```shellsession
+# by default docker mounts non-existent paths as directories, so create
+# an empty file to force a file mount of our final image
+$ touch seed.iso 
+$ docker run \
+    -v ./seed.iso:/seed.iso \
+    -v ./user-data:/user-data \
+    -v ./meta-data:/meta-data \
+    ubuntu:latest sh -c "
+      set -e
+      cp /user-data /user-data-copy
+      echo '      - $(cat ssh-key.pub)' >> /user-data-copy
+      apt-get update && apt-get install -y -qq cloud-image-utils
+      cloud-localds /seed.iso /user-data-copy /meta-data
+    "
+# notice my quick-and-easy way of injecting the ssh public key
+```
+
+Now take a look at the volume label of the seed.iso.
+
+```shellsession
+# the label is ASCII text stored in sector 16, where a sector is 2048
+# bytes in length
+$ hexdump -C -s $((16*2048)) -n 256 seed.iso
+00008000  01 43 44 30 30 31 01 00  4c 49 4e 55 58 20 20 20  |.CD001..LINUX   |
+00008010  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+00008020  20 20 20 20 20 20 20 20  63 69 64 61 74 61 20 20  |        cidata  |
+00008030  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+00008040  20 20 20 20 20 20 20 20  00 00 00 00 00 00 00 00  |        ........|
+00008050  b7 00 00 00 00 00 00 b7  00 00 00 00 00 00 00 00  |................|
+00008060  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008070  00 00 00 00 00 00 00 00  01 00 00 01 01 00 00 01  |................|
+00008080  00 08 08 00 0a 00 00 00  00 00 00 0a 14 00 00 00  |................|
+00008090  00 00 00 00 00 00 00 16  00 00 00 00 22 00 1c 00  |............"...|
+000080a0  00 00 00 00 00 1c 00 08  00 00 00 00 08 00 46 01  |..............F.|
+000080b0  01 00 00 00 00 02 00 00  01 00 00 01 01 00 20 20  |..............  |
+000080c0  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+*
+00008100
+```
+
+`cidata` is present! Now cloud-init will be able to identify our device and
+find the user-data and meta-data within.
+
+[`cloud-localds`]: https://manpages.debian.org/testing/cloud-image-utils/cloud-localds.1.en.html 'Debian Manpages: cloud-localds'
+[distributed]: https://documentation.ubuntu.com/public-images/public-images-how-to/use-local-cloud-init-ds/ 'Create and use a local cloud-init datasource'
+[maintained]: https://github.com/canonical/cloud-utils 'GitHub: canonical/cloud-utils'
 
 ## qemu-system-aarch64
 
@@ -291,6 +397,12 @@ nc -U qemu-monitor.sock
 ```
 
 I had been missing the UEFI, so QEMU was just hanging (TODO: explain the issue, basically, I had mounted the seed.iso but without UEFI there were no instructions to execute?)
+
+## TODO: instance-data to interpolate ssh pubkey
+
+after i've explained and understood cloud-localds, I need to understand how to
+mount instance-data.json with the pubkey at
+`/run/cloud-init/instance-data.json` when cloud-init runs during first vm boot.
 
 ## threat model
 
