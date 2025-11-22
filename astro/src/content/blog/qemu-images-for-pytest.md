@@ -9,7 +9,7 @@ Today I'm creating QEMU images and configuring them using cloud-init, all to
 create a virtual machine image to run the pytest suite for "faas", my educational
 implementation of a function-as-a-service platform.
 
-### Cloud-init and Ubuntu cloud image
+## Cloud-init and Ubuntu cloud image
 
 I'm going to use Ubuntu cloud images for our virtual machines. They come with
 cloud-init already installed, and skip any desktop installation steps, perfect
@@ -42,7 +42,7 @@ user-data configuration, so I won't template the file.
 
 I'll start by mentioning the `meta-data` file. This is required by cloud-init,
 and is usually fetched from a cloud-provider's metadata system that manages
-on-platform VMs. Since we're running this locally, we'll manually define
+on-platform VMs. Since we're running this locally, I manually define
 it.
 
 ```yaml
@@ -87,16 +87,14 @@ power_state:
   mode: poweroff
   delay: now
 users:
-  - default
   - name: faas_user
-    shell: /bin/bash
-    sudo: ['ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/poweroff, /sbin/reboot']
+    sudo: ['ALL=(root) NOPASSWD: /sbin/poweroff']
     ssh_authorized_keys:
 ```
 
-The VM is simple. It's meant to run our pytest suite, that's it, so we'll make
-sure to install `uv` (our package manager for Python) and any of its
-dependencies. We'll also be using `rsync` to copy our project source code and
+The VM is simple. It's meant to run the pytest suite, that's it, so make
+sure to install `uv` (the package manager for Python) and any of its
+dependencies. I'll also be using `rsync` to copy the project source code and
 test files into the VM, and `ssh` to send commands to the VM.
 
 I'd like to call out a couple cloud-init modules: ["power_state"] and ["users"].
@@ -111,8 +109,8 @@ finishes.
 "users" gives me an opportunity to define permissions for the VM user that I'll
 run the tests as. I haven't discussed the security policy or threat
 model for this project, but I'll avoid giving the user membership in the "sudo"
-group, except for the ability trigger a shutdown over SSH. Without that
-[sudoers rule], running `shutdown` over SSH will provoke a password prompt for
+group, except for the ability trigger a poweroff. Without that
+[sudoers rule], running `poweroff` over SSH will provoke a password prompt for
 the _password-less_ user. Finally, ssh_authorized_keys let's me specify the SSH
 keypair I'll use to connect to the running instance. I generate them separately
 from the VM, and `cat` the public key to the end of the `user-data` config when
@@ -125,19 +123,9 @@ but sometimes messy is fun 😄.
 ["users"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Users and Groups'
 [sudoers rule]: https://www.sudo.ws/docs/man/sudoers.man/ 'Sudoers Manual'
 
-### qemu-system-aarch64
+## qcow2 format
 
-break down this command arg by arg.
-
-dive into virtio, and netdev.
-
-Explain trade-off using "user" networking (NAT), how is lower performance because is software-based, but is fine because we are just doing this for initializing the image. Explain the other ways to do it (bridged mode or socket/taps?) but they are more complex, especially on Mac.
-
-Also `-nographic` is apparently a shortcut for `-display none -serial mon:stdio`? And what is difference between `-serial mon:stdio` and `-serial stdio`?
-
-### qcow2 format
-
-Modern QEMU images are in qcow2 format. That stands for "QEMU Copy-on-Write 2",
+The Ubuntu image is in qcow2 format. That stands for "QEMU Copy-on-Write 2",
 where copy-on-write means storage is not reserved ahead of time and is only
 allocated when needed. You can observe this by examing our Ubuntu image:
 
@@ -169,11 +157,11 @@ paying the cost of pre-allocation on the host, which is not the case for raw dis
 
 The old qcow v1 format is deprecated. qcow2 introduced a new header format and
 better snapshot features. There was an extension to qcow2 some years after it
-was introduced (originally called qcow3, identified with `compat: 1.1` in the image info) that added optional header extensions,
-enabling compression, encryption, improved snapshot performance, and
-single-host cluster management.
+was introduced (originally called qcow3, identified with `compat: 1.1` in the
+image info) that added optional header extensions, enabling compression,
+encryption, improved clustering, and easy snapshots.
 
-### qemu-img create
+## qemu-img create
 
 We have our base Ubuntu image and we've given it permission to consume at least
 20GiB of memory on the host, which will be more than enough for our test
@@ -203,7 +191,7 @@ to? Then our new image would only contain the different blocks against a
 read-only base image. These space-saving images are often called overlay
 images, and they're enabled by the qcow2 format. Let's take a look how.
 
-### qcow2 header
+## qcow2 header
 
 Each qcow2 file has a clearly defined [header format]. For each overlay image
 to only contain the differences between itself and a base image (called a
@@ -266,19 +254,26 @@ qemu-system-aarch64: -drive if=virtio,format=qcow2,file=test.img: Could not open
 
 We get an error that QEMU can't find the backing file. So, anytime we make overlay images, we need the base image to be accessible by QEMU to run them.
 
-### seed.iso vs ubuntu.img
+## cloud-localds and seed.iso 
 
 seed.iso contains the user-data and meta-data I think.
 
-ubuntu.img is the OS release.
-
-### cloud-localds
-
 Explain what it is. It's just a bash script.
 
-Had to run it in Docker, because MacOS uses another utility for creating iso (those are CD-rom files, maybe explain?)
+Had to run it in Docker, because MacOS uses another utility for creating iso
+(those are CD-rom files, maybe explain?)
 
-### How to debug QEMU
+## qemu-system-aarch64
+
+break down this command arg by arg.
+
+dive into virtio, and netdev.
+
+Explain trade-off using "user" networking (NAT), how is lower performance because is software-based, but is fine because we are just doing this for initializing the image. Explain the other ways to do it (bridged mode or socket/taps?) but they are more complex, especially on Mac.
+
+Also `-nographic` is apparently a shortcut for `-display none -serial mon:stdio`? And what is difference between `-serial mon:stdio` and `-serial stdio`?
+
+## How to debug QEMU
 
 Try to get logs and block the VM from shutting itself down:
 ```
@@ -297,22 +292,10 @@ nc -U qemu-monitor.sock
 
 I had been missing the UEFI, so QEMU was just hanging (TODO: explain the issue, basically, I had mounted the seed.iso but without UEFI there were no instructions to execute?)
 
-### user-data
-
-File has to start with "#cloud-config" or something bad happens.
-
-Go through the user-data file and explain what is going on.
-
-the `sudo: ['ALL=(ALL) NOPASSWD:ALL ...']` you need to trigger shutdown in non-interactive as a user (by running `sudo shutdown`, otherwise running `shutdown` without `sudo` will cause the vm to prompt for sudo password, which will fail in non-interactive mode). Would also be good to describe the syntax of this statement "ALL=(ALL)" etc it's weird.
-
-### meta-data
-
-I guess this names the instance and informs cloud-init whether it needs to run on boot? A little fuzzy here, what else does meta-data do?
-
-### threat model
+## threat model
 
 What is the threat model for this VM?
 
-### ssh-key
+## ssh-key
 
 explain how I am injecting the ssh public key. And how we will drive the test run over ssh.
