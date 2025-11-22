@@ -21,6 +21,7 @@ const { title = "couetil.com", description = "About Connor Couetil" } = Astro.pr
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <title>{title}</title>
+    <slot name="head" />
   </head>
   <body>
     <pre hidden>

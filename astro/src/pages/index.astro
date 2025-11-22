@@ -4,6 +4,10 @@ import '../styles/home.css';
 ---
 
 <BaseLayout title="Yo.">
+  <link slot="head"
+    rel="preload" fetchpriority="high"
+    href="/scribble.svg" as="image" type="image/svg+xml"
+  />
 
   <section id="content">
     <picture id="background">
