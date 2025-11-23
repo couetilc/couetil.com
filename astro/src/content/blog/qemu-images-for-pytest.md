@@ -366,13 +366,92 @@ find the user-data and meta-data within.
 
 ## qemu-system-aarch64
 
-break down this command arg by arg.
+Now I have a seed image containing our cloud-init configuration, and the
+overlay image backed by the Ubuntu image. It's time to initialize the operating
+system and produce our base image for test runs. The hard part has been done,
+now it's time to boot the VM and let cloud-init do its thing.
 
-dive into virtio, and netdev.
+The following command start the QEMU emulator process:
 
-Explain trade-off using "user" networking (NAT), how is lower performance because is software-based, but is fine because we are just doing this for initializing the image. Explain the other ways to do it (bridged mode or socket/taps?) but they are more complex, especially on Mac.
+```sh
+qemu-system-aarch64 \
+    -accel hvf \
+    -cpu host \
+    -machine virt \
+    -smp 4 \
+    -m 4G \
+    -drive file=seed.iso,if=none,format=raw,readonly=on,id=cidata \
+    -device virtio-blk-pci,drive=cidata \
+    -drive file=test_runner.img,if=none,format=qcow2,id=hd0 \
+    -device virtio-blk-pci,drive=hd0 \
+    -device virtio-net-pci,netdev=net0 \
+    -netdev user,id=net0 \
+    -nographic \
+    -bios "$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd"
+```
 
-Also `-nographic` is apparently a shortcut for `-display none -serial mon:stdio`? And what is difference between `-serial mon:stdio` and `-serial stdio`?
+Let's break this command down line-by-line. First, the `qemu-system-aarch64`
+command starts the 64-bit ARM architecture simulator. My M1 Mac is an ARM
+processor, so selecting the same instruction set gives me a chance at running
+code in the VM at near-native performance, as QEMU won't have to translate each
+instruction coming from the VM (the guest) to the proper instruction set on my
+Mac (the host).
+
+To that end, the option `-accel hvf` causes QEMU to use [Apple's own Hypervisor
+framework] and take advantage of hardware-based virtualization, which is much
+faster than a software-based one. And `-cpu host` exposes CPU details from the
+host to the guest, which means guest software can take advantage of all ISA
+features from the host if it's already been optimized with them in mind.
+
+Next, the `-machine virt` flag indicates the guest OS will be run as a generic
+virtual machine whose emulated physical characteristics are up to the user to
+specify. Otherwise, QEMU will limit the hardware to what's possible on the
+specific machine platform chosen, for example, emulating a RaspberryPi's
+hardware exactly. This flag sets the option `highmem=on` by default, which
+allows you to grant more RAM to the virtual machine by expanding the memory
+address-space to >4G.
+
+So let's specify some of those physical characteristics. First, `-smp 4` grants
+4 CPU cores, and `-m 4G` grants 4 Gibibytes of RAM, to the virtual machine.
+Next, mount the drives. `-drive
+file=seed.iso,if=none,format=raw,readonly=on,id=cidata` is the "Backend"
+specification for a drive, and `-device virtio-blk-pci,drive=cidata` is the
+"Frontend" specification of how that drive is presented to the guest OS. In
+this case, our seed.iso is a raw image that should only be read, and we expose
+it to the guest through a "virtio-blk-pci" interface. VirtIO is a
+high-performance para-virtualized device interface that informs device drivers
+they're being virtualized, giving them tools to cooperate with the hypervisor
+for better performance. I also specify `-drive
+file=test_runner.img,if=none,format=qcow2,id=hd0`, the OS image, and mount it
+in the same way `-device virtio-blk-pci,drive=hd0`. Same interface, different
+backing format. Remember, raw images are better for performance, but qcow2
+allows virtual machine disk size to grow on-demand, which is better for
+experimentation.
+
+Gemini suggested adding the `-device virtio-rng-pci` flag to improve crypto
+performance, it exposes the host's hardware RNG to the guest. My server
+application is not doing much crypto at the moment, so we'll omit it. Enabling
+it didn't help boot times anyway.
+
+Next, networking. We specify a the backend network interface using `-device
+virtio-net-pci,netdev=net0`, and then mount it into the guest with `-netdev
+user,id=net0`.  `-netdev user` is QEMU's user-mode networking feature. QEMU
+creates a network in the guest and internally manages a NAT server for it. This
+adds overhead. QEMU now has to intercept packets, rewrite headers, and manage a
+routing table, all in userspace. If I wanted to improve performance, I would
+use TAP/bridge networking, but that feature has been limited on MacOS. (A TAP
+device is a virtual ethernet cable, while a bridge is the layer 2 switch
+beetween that virtual cable and the host's local area network).
+
+[Apple's own Hypervisor framework]: https://developer.apple.com/documentation/hypervisor 'Apple Documentation: Hypervisor'
+
+We're getting close to the end. `-nographic` is a short-hand for `-display none` and `-serial mon:stdio`. `-display none` does not mount a graphical device in the virtual machine, while `-serial mon:stdio` multiplexes two serial interfaces of data: stdin/stdout from the guest console, and the QEMU monitor console. The monitor console is a serial interface to QEMU that lets you send commands to control and inspect the virtual machine. We'll touch more on that in the debugging section.
+
+Finally, we specify the BIOS: `-bios "$(brew --prefix
+qemu)/share/qemu/edk2-aarch64-code.fd"`. The ARM-specific BIOS is bundled with
+the QEMU's homebrew release. This is the firmware that takes care of booting
+the guest OS on the host architecture. Without this, the virtual machine
+wouldn't know where to start, or what hardware it has available.
 
 ## How to debug QEMU
 
