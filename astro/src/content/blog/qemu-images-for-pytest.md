@@ -413,8 +413,7 @@ address-space to >4G.
 
 So let's specify some of those physical characteristics. First, `-smp 4` grants
 4 CPU cores, and `-m 4G` grants 4 Gibibytes of RAM, to the virtual machine.
-Next, mount the drives. `-drive
-file=seed.iso,if=none,format=raw,readonly=on,id=cidata` is the "Backend"
+Next, mount the drives. `-drive file=seed.iso,if=none,format=raw,readonly=on,id=cidata` is the "Backend"
 specification for a drive, and `-device virtio-blk-pci,drive=cidata` is the
 "Frontend" specification of how that drive is presented to the guest OS. In
 this case, our seed.iso is a raw image that should only be read, and we expose
@@ -441,7 +440,7 @@ adds overhead. QEMU now has to intercept packets, rewrite headers, and manage a
 routing table, all in userspace. If I wanted to improve performance, I would
 use TAP/bridge networking, but that feature has been limited on MacOS. (A TAP
 device is a virtual ethernet cable, while a bridge is the layer 2 switch
-beetween that virtual cable and the host's local area network).
+between that virtual cable and the host's local area network).
 
 [Apple's own Hypervisor framework]: https://developer.apple.com/documentation/hypervisor 'Apple Documentation: Hypervisor'
 
@@ -482,6 +481,10 @@ mount instance-data.json with the pubkey at
 
 What is the threat model for this VM?
 
-## ssh-key
+## driving pytest over ssh
 
-explain how I am injecting the ssh public key. And how we will drive the test run over ssh.
+explain how I am injecting the ssh public key. And how we will drive the test
+run over ssh.
+
+This final section should just be running the pytest suite. Explain the options
+I add to the qemu-system-aarch64 command.
