@@ -1,6 +1,6 @@
 ---
 title: 'Creating QEMU images for pytest'
-description: 'Creating a Virtual Machine image for test runs of my faas platform using QEMU and cloud-init'
+description: 'Creating a Virtual Machine image for test runs of my faas platform using QEMU and cloud-init.'
 pubDate: 2025-11-19
 draft: false
 ---
@@ -160,7 +160,7 @@ The old qcow v1 format is deprecated. qcow2 introduced a new header format and
 better snapshot features. There was an extension to qcow2 some years after it
 was introduced (originally called qcow3, identified with `compat: 1.1` in the
 image info) that added optional header extensions, enabling compression,
-encryption, improved clustering, and easy snapshots.
+encryption, improved clustering, and easier snapshots.
 
 ## qemu-img create
 
@@ -255,11 +255,6 @@ qemu-system-aarch64: -drive if=virtio,format=qcow2,file=test.img: Could not open
 
 We get an error that QEMU can't find the backing file. So, anytime we make overlay images, we need the base image to be accessible by QEMU to run them.
 
-## TODO: how does copy-on-write work?
-
-It's the clusters, L1 and L2, and how the overlay's L1 and L2 point to the
-backing's L1 and L2, which points to its backing L1 and L2, etc.
-
 ## cloud-localds and seed images
 
 The overlay image is backed by the Ubuntu release image, and I'll apply the
@@ -313,7 +308,7 @@ by enabling the flags.
 
 (Fun fact, the `-rock` extension is called "Rock Ridge
 Interchange Protocol", and is named after the town in [Mel Brook's "Blazing
-Saddles"], one of the funniest movies of all time.)
+Saddles"])
 
 [Mel Brook's "Blazing Saddles"]: https://en.wikipedia.org/wiki/Blazing_Saddles 'Wikipedia: Blazing Saddles'
 
