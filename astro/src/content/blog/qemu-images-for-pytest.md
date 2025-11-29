@@ -6,7 +6,7 @@ draft: false
 ---
 
 Today I'm creating QEMU images and configuring them using cloud-init, all to
-create a virtual machine image to run the pytest suite for "faas", my educational
+create a virtual machine image to run the pytest suite for "faas", my
 implementation of a function-as-a-service platform.
 
 ## Cloud-init and Ubuntu cloud image
@@ -29,7 +29,7 @@ systemd-networkd-wait-online.service/start running`. Not sure why, but let's
 define the cloud-init files and bootstrap the VM.
 
 There are two files to create:
-- `user-data`: "cloud-config" style YAML that declaritively configures the VM.
+- `user-data`: "cloud-config" style YAML that declaratively configures the VM.
 - `meta-data`: per-instance details for configuration (instance-id, local-hostname)
 
 Cloud-init has templating built in, where key-values from a JSON object in a
@@ -112,7 +112,7 @@ run the tests as. I haven't discussed the security policy or threat
 model for this project, but I'll avoid giving the user membership in the "sudo"
 group, except for the ability trigger a poweroff. Without that
 [sudoers rule], running `poweroff` over SSH will provoke a password prompt for
-the _password-less_ user. Finally, ssh_authorized_keys let's me specify the SSH
+the _password-less_ user. Finally, ssh_authorized_keys lets me specify the SSH
 keypair I'll use to connect to the running instance. I generate them separately
 from the VM, and `cat` the public key to the end of the `user-data` config when
 I create the `seed.iso` with the cloud-init seed data created by
@@ -121,7 +121,7 @@ earlier is a great way to interpolate public keys into your cloud-init config,
 but sometimes messy is fun 😄.
 
 ["power_state"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Power State Change'
-["users"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#power-state-change 'Module Reference: Users and Groups'
+["users"]: https://cloudinit.readthedocs.io/en/latest/reference/modules.html#users-and-groups 'Module Reference: Users and Groups'
 [sudoers rule]: https://www.sudo.ws/docs/man/sudoers.man/ 'Sudoers Manual'
 
 ## qcow2 format
@@ -262,7 +262,7 @@ project's specific configuration to this overlay. I can then re-use the
 initialized test runner overlay image for test run instance images we can
 discard or debug.
 
-How do I initialize the overlay image? I've already describe the desired
+How do I initialize the overlay image? I've already described the desired
 configuration of the VM in the `user-data` section above, but I haven't applied
 it to any image. In order to do that, I have to make the `user-data` and
 `meta-data` files available to cloud-init at boot-up time. This strategy has
@@ -307,10 +307,10 @@ point. They are not strictly necessary for this use-case, but nothing is lost
 by enabling the flags.
 
 (Fun fact, the `-rock` extension is called "Rock Ridge
-Interchange Protocol", and is named after the town in [Mel Brook's "Blazing
+Interchange Protocol", and is named after the town in [Mel Brooks' "Blazing
 Saddles"])
 
-[Mel Brook's "Blazing Saddles"]: https://en.wikipedia.org/wiki/Blazing_Saddles 'Wikipedia: Blazing Saddles'
+[Mel Brooks' "Blazing Saddles"]: https://en.wikipedia.org/wiki/Blazing_Saddles 'Wikipedia: Blazing Saddles'
 
 Now that I've explained how the `cloud-localds` command works, I'll run it to
 create the seed.iso image. `cloud-localds` only runs on Linux and I'm on MacOS,
@@ -427,12 +427,7 @@ backing format. Remember, raw images are better for performance, but qcow2
 allows virtual machine disk size to grow on-demand, which is better for
 experimentation.
 
-Gemini suggested adding the `-device virtio-rng-pci` flag to improve crypto
-performance, it exposes the host's hardware RNG to the guest. My server
-application is not doing much crypto at the moment, so we'll omit it. Enabling
-it didn't help boot times anyway.
-
-Next, networking. We specify a the backend network interface using `-device
+Next, networking. We specify the backend network interface using `-device
 virtio-net-pci,netdev=net0`, and then mount it into the guest with `-netdev
 user,id=net0`.  `-netdev user` is QEMU's user-mode networking feature. QEMU
 creates a network in the guest and internally manages a NAT server for it. This
@@ -455,6 +450,7 @@ wouldn't know where to start, or what hardware it has available.
 ## How to debug QEMU
 
 Try to get logs and block the VM from shutting itself down:
+
 ```
 -D qemu-log.txt -no-shutdown
 ```
@@ -469,22 +465,67 @@ nc -U qemu-monitor.sock
 # run "info status" to see current VM state
 ```
 
-I had been missing the UEFI, so QEMU was just hanging (TODO: explain the issue, basically, I had mounted the seed.iso but without UEFI there were no instructions to execute?)
-
-## TODO: instance-data to interpolate ssh pubkey
-
-after i've explained and understood cloud-localds, I need to understand how to
-mount instance-data.json with the pubkey at
-`/run/cloud-init/instance-data.json` when cloud-init runs during first vm boot.
-
 ## threat model
 
-What is the threat model for this VM?
+A Function-as-a-Service runs code on behalf of customers, and must control
+access to the provider's own system, while monitoring its behavior for
+reliability and security.
 
 ## driving pytest over ssh
 
-explain how I am injecting the ssh public key. And how we will drive the test
-run over ssh.
+This one's easy. Start the virtual machine.
 
-This final section should just be running the pytest suite. Explain the options
-I add to the qemu-system-aarch64 command.
+```shellsession
+$ qemu-system-aarch64 \
+    -bios "$(brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd" \
+    -accel hvf \
+    -cpu host \
+    -machine virt \
+    -smp 4 \
+    -m 4G \
+    -nographic \
+    -drive "if=virtio,format=qcow2,file=test_runner.img \
+    -nic user,model=virtio-net-pci,hostfwd=tcp::2222-:22 \
+    &>/dev/null \
+    & # run in background
+```
+
+Send your software and test files into the virtual machine user's home directory.
+
+```shellsession
+$ rsync \
+    -e "$ssh" \
+    -qa \
+    --include "pyproject.toml" \
+    --include "pytest.toml" \
+    --include "uv.lock" \
+    --include "src/***" \
+    --include "tests/***" \
+    --exclude "*" \
+    "$ROOT/" faas_user@localhost:~
+```
+
+And run pytest.
+
+```shellsession
+$ ssh="ssh \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o ConnectTimeout=1 \
+    -o ConnectionAttempts=1 \
+    -o LogLevel=quiet \
+    -p 2222 \
+    -i ./ssh-key"
+
+$ $ssh faas_user@localhost 'uv run pytest && sudo poweroff'
+```
+
+Then just `wait`
+
+```shellsession
+$ wait
+Booting vm
+checking for port readiness...Done (0m0.120s)
+checking for ssh availability......Done (0m11.687s)
+Running pytest...Done (0m2.946s)
+```
