@@ -171,6 +171,12 @@ log("Hello, World!")
 
 threads will need a reference to asyncio thread pool execute to run async tasks
 
+```py
+async def fn():
+  time.sleep(10)
+asyncio.run(fn()) # blocks until async function is done
+```
+
 ## subprocess runs
 
 - popen vs run vs anything else?
@@ -197,4 +203,68 @@ I am going to have a thread, that waits on a queue for message to send over
 qemu monitor's serial port. I have to start a QEMU vm subprocess, a connection
 
 ```py
+```
+
+## Tips and Tricks
+
+Read the source code for modules from the command line:
+
+```py
+import threading, inspect
+with open('./threading.py', 'w') as f:
+    f.write(inspect.getsource(threading))
+```
+
+```shellsession
+$ cat threading.py
+"""Thread module emulating a subset of Java's threading model."""
+
+import os as _os
+import sys as _sys
+import _thread
+import _contextvars
+
+from time import monotonic as _time
+from _weakrefset import WeakSet
+from itertools import count as _count
+try:
+    from _collections import deque as _deque
+except ImportError:
+    from collections import deque as _deque
+
+# Note regarding PEP 8 compliant names
+#  This threading model was originally inspired by Java, and inherited
+# the convention of camelCase function and method names from that
+# language. Those original names are not in any imminent danger of
+# being deprecated (even for Py3k),so this module provides them as an
+# alias for the PEP 8 compliant names
+# Note that using the new PEP 8 compliant names facilitates substitution
+# with the multiprocessing module, which doesn't provide the old
+# Java inspired names.
+...
+```
+
+But you won't be able to inspect the compiled modules.
+
+```py
+$ python
+>>> import _thread, inspect
+>>> print(inspect.getsource(_thread))
+Traceback (most recent call last):
+  File "<python-input-39>", line 1, in <module>
+    print(inspect.getsource(_thread))
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/inspect.py", line 1155, in getsource
+    lines, lnum = getsourcelines(object)
+                  ~~~~~~~~~~~~~~^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/inspect.py", line 1137, in getsourcelines
+    lines, lnum = findsource(object)
+                  ~~~~~~~~~~^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/inspect.py", line 957, in findsource
+    file = getsourcefile(object)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/inspect.py", line 861, in getsourcefile
+    filename = getfile(object)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/inspect.py", line 822, in getfile
+    raise TypeError('{!r} is a built-in module'.format(object))
+TypeError: <module '_thread' (built-in)> is a built-in module
 ```
