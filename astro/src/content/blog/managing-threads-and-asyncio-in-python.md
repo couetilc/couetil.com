@@ -567,3 +567,6 @@ through the graph is the shortest?
 So, I've developed the API for expressing a TaskGroup's constraints, now, to
 determine the algorithms that use those constraints to develop an execution
 graph.
+
+I could use networkx to implement the graph parts. Makes my life a lot easier.
+https://networkx.org/documentation/stable/reference/introduction.html
