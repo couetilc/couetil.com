@@ -536,15 +536,34 @@ class TaskGroup:
     def __init__(self, task, var):
       self.task = task
       self.var = var
+  def add_precedence(self, *tasks):
+    self.precedences.append(tasks)
   def add_tasks(self, *tasks):
     self.tasks.extend(tasks)
     for task in tasks:
       self.identify_data_dependency(task)
-    def identify_data_dependency(self, task):
-      for key, val in vars(task):
-        if isinstance(val, TaskGroup.Dependency):
-          if val.task in tasks:
-            return True
-          else
-            raise Exception('data dependency relies on a task not in the task group')
+  def identify_data_dependency(self, task):
+    for key, val in vars(task):
+      if isinstance(val, TaskGroup.Dependency):
+        if val.task in tasks:
+          return True
+        else
+          raise Exception('data dependency relies on a task not in the task group')
 ```
+
+What's next? I've identified all constraints. Now I need to construct a task
+graph and check the TaskGroup constraints are preserved.
+
+I need to make sure:
+- task data dependencies have the corresponding task in the task group.
+- tasks are ordered by data dependencies
+- tasks are ordered by precedence rules
+
+Likely, there will be multiple candidate graphs that match all constraints. How
+do I narrow these down to a single execution plan? Is there a "minimal" graph
+that maximizes concurrency? Maybe where the average path length for all paths
+through the graph is the shortest?
+
+So, I've developed the API for expressing a TaskGroup's constraints, now, to
+determine the algorithms that use those constraints to develop an execution
+graph.
