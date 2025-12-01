@@ -494,4 +494,57 @@ Hmmm maybe you could be explicit about a data dependency if the name is wrong:
 This could perhaps be a python "protocol" instead
 https://typing.python.org/en/latest/spec/protocol.html
 
+Remember this pattern? Can I have `add_task` both ways?
 
+```py
+run_once = TaskGroup(name = 'run tests once')
+run_once.add_task(OverlayImageTask(base_image = ''))
+run_once.add_task(QemuVmTask, name = 'start test vm', image = 'ubuntu.img')
+run_once.add_task(PortReadyTask, port = DataDependency(QemuVmTask, 'ssh_port'))
+```
+
+I think is best if like
+
+```py
+run_once = TaskGroup(name = 'run tests once')
+overlay_image = OverlayImageTask(base_image = '')
+
+qemu_vm = QemuVmTask(image = TaskGroup.Dependency(overlay_image, 'image'))
+port_ready = PortReadyTask(port = TaskGroup.Dependency(vm, 'ssh_port'))
+ssh_ready = PortReadyTask(port = TaskGroup.Dependency(vm, 'ssh_port'))
+# calculate the correctness of the task dependency graph on every add,
+# but allow adding multiple tasks at once and have dependency graph correctness
+# evaluated with all tasks considered.
+run_once.add_tasks(image_task, qemu_vm, port_ready, ssh_ready)
+run_once.add_precedence(port_ready, ssh_ready)
+```
+
+I don't think there should be automatic injection for Tasks, I think the
+argument passing should be explicit. In contrast, `pytest` is more liberal.
+There's an argument for convenience, but in the case of asynchronous tasks,
+coherence persuades. `pytest` fixture computations are cached, then copied
+on-demand. Task orders are influenced by data dependencies, which left implicit 
+allows task group re-ordering simply by changing an `__init__` parameter's
+name.
+
+Now I need to be able to list all the "self.*" instance variables, to check if
+any of them are a "TaskGroup.Dependency" type. I can do that using `vars()`.
+
+```py
+class TaskGroup:
+  class Dependency:
+    def __init__(self, task, var):
+      self.task = task
+      self.var = var
+  def add_tasks(self, *tasks):
+    self.tasks.extend(tasks)
+    for task in tasks:
+      self.identify_data_dependency(task)
+    def identify_data_dependency(self, task):
+      for key, val in vars(task):
+        if isinstance(val, TaskGroup.Dependency):
+          if val.task in tasks:
+            return True
+          else
+            raise Exception('data dependency relies on a task not in the task group')
+```
