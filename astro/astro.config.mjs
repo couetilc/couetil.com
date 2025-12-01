@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import { bundledLanguages } from 'shiki'
+import rehypeMermaid from 'rehype-mermaid'
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,5 +14,10 @@ export default defineConfig({
       },
       wrap: true,
     },
+    syntaxHighlight: {
+      type: 'shiki',
+      excludeLangs: ['mermaid', 'math'],
+    },
+    rehypePlugins: [rehypeMermaid],
   },
 });

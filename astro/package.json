@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.13",
-    "astro": "^5.14.1"
+    "astro": "^5.14.1",
+    "playwright": "^1.57.0",
+    "rehype-mermaid": "^3.0.0"
   }
 }

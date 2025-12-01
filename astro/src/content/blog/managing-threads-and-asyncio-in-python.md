@@ -569,4 +569,18 @@ determine the algorithms that use those constraints to develop an execution
 graph.
 
 I could use networkx to implement the graph parts. Makes my life a lot easier.
-https://networkx.org/documentation/stable/reference/introduction.html
+https://networkx.org/documentation/stable/reference/introduction.html.
+
+Would be nice to have nice debugging error message when constraints are broken.
+Perhaps a printed out mermaid diagram that renders with colors/text outlining
+the issue.
+
+Example mermaid diagram of a task graph:
+
+```mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+```

@@ -1,5 +1,6 @@
 # Development stage
-FROM node:22.14.0-alpine AS development
+FROM node:22.14.0-slim AS development
+# using "slim" for playwright, does not work with alpine.
 
 WORKDIR /app
 
@@ -7,6 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including dev)
+RUN npx playwright install --with-deps chromium
 RUN --mount=type=cache,target=/root/.npm npm install
 
 # Expose port
