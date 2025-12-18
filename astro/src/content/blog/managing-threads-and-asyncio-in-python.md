@@ -737,3 +737,186 @@ doesn't matter. So when a thread finishes, it will publish the event.
 
 I need to think about what the new approach, where we don't wait() threads, fits.
 but threads need to publish a completion event. Hmmm.
+
+## Outline of TaskGroup+Task explanation
+
+I had been motivated to explore concurrency in Python when trying to integrate
+an async-based library into a thread-based system I had been building. The
+question I asked then was, how do threads, processes, and asyncio work
+together? The practical application of these ideas came when building a test
+suite runner for a project of mine.
+
+I had a set of steps to perform to prepare a virtual machine for a test run.
+Some steps required data from other steps, other steps required starting other
+executables and waiting for them to finish, and while coding them up I found
+myself wanted a delcarative syntax for these task definitions along with
+standardized metrics and logging, while retaining the flexibility of Python
+syntax for defining _what_ the steps should do.
+
+I started to develop two abstractions, a *Task* and a *TaskGroup*. A Task is a
+single Python function to execute, while a TaskGroup is a collection of Tasks
+which orchestrates their execution and enables data sharing and standardized
+monitoring.
+
+Tasks have a simple definition:
+
+```py
+task = Task() # a Task that performs no operations
+```
+
+and can be assigned a function to run:
+
+```py
+def hello(subject = 'world'):
+  print(f"hello {subject}"!)
+greet = Task(target=hello)
+```
+
+Each task is *threaded*. The target function will be executed in its own
+thread. This allows the main thread to continue executing other tasks until a
+particular task is `wait()`ed. Let's take a look at that.
+
+```py
+greet.start()
+print(
+  "this is the main thread, the task is running asynchronously, this message may "
+  "be printed before or after the greeting")
+greet.wait()
+print("now this message is guaranteed to come after the greeting")
+```
+
+The `.wait()` method blocks the main thread until the task thread has
+completed. So, we have simple concurrency, where the main thread can start
+subthreads and have a mechanism to coordinate with them.
+
+I wanted to write unit tests for these features, so I had to come up with a
+method of tracking Python threads from pytest. I developed an assertion helper
+that would track threads over a window of execution. The trouble is, if you
+don't clearly define when to start and stop tracking threads, you can run into
+race conditions. Let's take a naive approach:
+
+```py
+def test_races():
+    task = Task()
+    task.start() # short-running task
+    assert_tasks(nthread = 1) # may or may not run before the task finishes
+    task.wait()
+```
+
+I want to assert there is a subthread running, but I can't be sure the
+statement will run before or after the thread has finished executing.
+
+So, I define an execution window, and check the number of spawned threads at
+the end, rather than trying to catch a thread during its execution.
+
+```py
+def test_doesnt_race():
+    task = Task()
+    with assert_tasks(nthread = 1):
+        task.start() # short-running task
+        task.wait()
+```
+
+Now I can clearly state my expectations for the contained statements, track
+execution state over the context, and assert on that state at the appropriate
+endpoint.
+
+Let's take a look at the implementation of that test helper as its heavily used
+in the test suite and provides some insight into Python's threading module.
+
+````py
+@contextlib.contextmanager
+def assert_tasks(*, nthread = None, order = None):
+    """
+    Tracks threads over the execution window of a "with" block.
+
+    USAGE:
+
+    Pass "nthread" to assert on the number of expected threads:
+
+    ```py
+    def test_property():
+        task = Task()
+        with assert_tasks(nthread = 1):
+            task.start()
+            task.wait()
+    ```
+
+    Pass "order" to assert on the task execution order
+
+    ```py
+    def test_property():
+        group = TaskGroup()
+        task1 = Task()
+        task2 = Task()
+        group.add_precedence(task1, task2)
+        with assert_tasks(order = [task1, task2]):
+            group.start()
+            group.wait()
+    ```
+    """
+    class ThreadTracker:
+        def __init__(self):
+            self.lock = threading.Lock()
+            self.threads = set()
+            self.tasks = collections.defaultdict(list)
+        def track(self, thread):
+            if thread.name == 'TaskGroup.control_loop':
+                return
+            with self.lock:
+                if thread.id not in self.threads:
+                    self.threads.add(thread.id)
+                    self.tasks[thread.task_id].append(thread.id)
+        @property
+        def nthread(self):
+            return len(self.threads)
+        def assert_nthread(self, n):
+            assert self.nthread == n, (
+                f"Started {tracker.nthread} non-main thread(s), expected {nthread}")
+        def assert_order(self, before: Task, after: Task):
+            assert min(self.tasks[before.id]) < min(self.tasks[after.id]), (
+                'task "{1}" came before "{0}", expected "{0}" to come before "{1}"'.format(before, after))
+
+    tracker = ThreadTracker()
+
+    def trace_function(frame, event, arg):
+        tracker.track(threading.current_thread())
+
+    threading.settrace(trace_function)
+    yield tracker
+    threading.settrace(None)
+
+    if nthread != None:
+        tracker.assert_nthread(nthread)
+
+    if order != None:
+        if len(order) < 2:
+            raise Exception("Invalid order argument to assert_tasks. order must contain two or more tasks.")
+        for i in range(len(order) - 1):
+            tracker.assert_order(order[i], order[i + 1])
+````
+
+The key idea is to use the `threading` module's `settrace` method to set a
+trace function for each function call in a thread. When the trace function is
+triggered from within a thread, we check the thread's unique id (created by the
+Thread class) and store it along with the task id in a data structure. We can
+use this information to derive how many threads were executed, what tasks, and
+in what order.
+
+To accomplish this, the Task class had to subclass Python's Thread class to
+assign the unique id when the task is defined.
+
+```py
+class Task:
+    # ...
+    class Thread(threading.Thread):
+        count = itertools.count(0) # not sure what maximum value is, internet suggests infinite
+        lock = threading.Lock()
+        def __init__(self, task: Task, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            with Task.Thread.lock:
+                self.id = next(Task.Thread.count)
+            self.name = f"TaskThread-{self.id}"
+            self.task_id = task.id
+    # ...
+```
