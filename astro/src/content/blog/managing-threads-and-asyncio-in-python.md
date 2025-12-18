@@ -579,8 +579,161 @@ Example mermaid diagram of a task graph:
 
 ```mermaid
 graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
+    A --> B
     D --> B
 ```
+
+
+## How threads will share data
+
+Now I have to figure out how threads will share data. I have a feeling the
+queue.Queue class should be fine. The issue is that concurrent threads will
+share data. I suppose I'll have them publish the data to some TaskGroup queue,
+and it uses that event to decide what to run next.
+
+I have my custom thread class, which grants unique ids and stores the task result.
+
+```py
+class Thread(threading.Thread):
+    count = itertools.count(0) # not sure what maximum value is, internet suggests infinite
+    lock = threading.Lock()
+    def __init__(self, task: Task, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        with Task.Thread.lock:
+            self.id = next(Task.Thread.count)
+        self.name = f"TaskThread-{self.id}"
+        self.task_id = task.id
+        self.result = None
+    def run(self):
+        """
+        Override threading.Thread.run to store return value in self.result.
+        (see: inspect.getsource(threading.Thread))
+        """
+        try:
+            if self._target is not None:
+                self.result = self._target(*self._args, **self._kwargs)
+                # TODO: publish to task group queue? or have hooks?
+        finally:
+            del self._target, self._args, self._kwargs
+```
+
+It will have to publish result? But what does it look like from the TaskGroup
+perspective? The TaskGroup has to receive the events from all tasks, so it
+needs to inject the queue.Queue into the task with an on_success hook. But how
+will that be added to the TaskGroup?
+
+This is the `add_tasks` function of the TaskGroup class, it keeps track of
+tasks and their dependencies.
+
+```py
+class TaskGroup:
+    # ...
+    def add_tasks(self, *args):
+        # add tasks to data structures
+        self.tasks.update(args)
+        self.graph.add_nodes_from(args)
+        edges = list()
+        # identifies data dependency between tasks and records the constraint
+        def check_dependency(arg):
+            if isinstance(arg, TaskGroup.Dependency):
+                if arg.task not in self.tasks:
+                    raise TaskGroup.Exception(
+                        'Detected TaskGroup Dependency wrapping unrecognized task. '
+                        'TaskGroup Dependencies must be added to the TaskGroup. '
+                    )
+                edges.append((arg.task, task))
+        # check for data dependencies in the new Task's arguments
+        try:
+            for task in args:
+                for arg in task.args:
+                    check_dependency(arg)
+                for key in task.kwargs:
+                    check_dependency(task.kwargs[key])
+            for edge in edges:
+                self.graph.add_edge(*edge)
+            # ensure the graph remains a Directed Acyclic Graph (DAG)
+            if exc := self.verify_constraints():
+                raise exc
+        # perform recovery, rolling back any data structure changes
+        except TaskGroup.Exception as e:
+            for edge in edges:
+                self.graph.remove_edge(*edge)
+            self.tasks.difference_update(args)
+            self.graph.remove_nodes_from(args)
+            raise e
+```
+
+If the tasks are successfully added, those tasks need an on_success handler
+registered with them. So Tasks need a hook system.
+
+Hooks are:
+- on_success and on_exception (later)
+- a hook can be set many times, by many TaskGroups, and the Task manages
+calling the hooks
+- and I guess the thread would have to communicate with the main thread through a queue.
+
+```py
+class Task:
+    class Thread(threading.Thread):
+        count = itertools.count(0) # not sure what maximum value is, internet suggests infinite
+        lock = threading.Lock()
+        def __init__(self, task: Task, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            with Task.Thread.lock:
+                self.id = next(Task.Thread.count)
+            self.name = f"TaskThread-{self.id}"
+            self.task_id = task.id
+            self.result = None
+        def run(self):
+            """
+            Override threading.Thread.run to store return value in self.result.
+            (see: inspect.getsource(threading.Thread))
+            """
+            try:
+                if self._target is not None:
+                    self.result = self._target(*self._args, **self._kwargs)
+            finally:
+                del self._target, self._args, self._kwargs
+
+    def __init__(self, target = None, name = None, args = list(), kwargs = dict()):
+        self.id = id(self)
+        self.target = target if target else lambda: None
+        self.args = args
+        self.kwargs = kwargs
+        if name:
+            self.name = name
+        elif self.target.__name__ != '<lambda>':
+            self.name = self.target.__name__
+        else:
+            self.name = f"lambda:{self.id}"
+        self.hooks = {'on_success': set()}
+    def __str__(self):
+        return f"Task[{self.name}]"
+    def start(self):
+        self.thread = Task.Thread(task=self, target=self.target,args=(),kwargs={})
+        print(f"starting [Task: {self.id}] [Thread: {self.thread.id}]")
+        self.thread.start()
+    def wait(self, timeout = None):
+        self.thread.join(timeout)
+        for hook in self.hooks:
+            match hook:
+                case ('on_success', fns):
+                    for fn in fns:
+                        fn(self.thread.result)
+    def set_args(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+    def set_hook(self, hook, fn):
+        self.hooks[hook].update(fn)
+    def del_hook(self, hook, fn):
+        self.hooks[hook].difference_update(fn)
+```
+
+So a TaskGroup's responsibility is to wait() the Task threads in the right
+order that it can resolve data dependencies. I wonder if there is another way
+to do this. Instead on wait on each thread, can it wait on events from the
+queue? Then use those events to trigger other task runs? Then .wait() order
+doesn't matter. So when a thread finishes, it will publish the event.
+
+I need to think about what the new approach, where we don't wait() threads, fits.
+but threads need to publish a completion event. Hmmm.
