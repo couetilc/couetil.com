@@ -269,476 +269,7 @@ Traceback (most recent call last):
 TypeError: <module '_thread' (built-in)> is a built-in module
 ```
 
-## API design for TaskGroup and Task
-
-
-TODO: some type of TaskThread class
-- needs to specify dependencies:
-  - parent dependencies: thread does not execute until condition from parent is satisfied.
-  - child dependencies: communicate conditions somehow
-- holds reference to a cancel event used by each TaskThread
-- maybe Queue for communication between parents/childs? (instead of single Event, could have queue that receives event messages, and also shuts down when parent finishes)
-  - queue's can send messages: (like "ready")
-  - queue's can end. See "Queue.shutdown()"
-- timing tracking (start time, end time, duration)
-- automatic resource cleanup after completion.
-- handles interrupts well and across all tasks
-- task's childrens execute concurrently.
-
-TODO: maybe TaskGraph stores a global context dictionary, that each task receives as
-an argument?
-
-```py
-class TaskGraph:
-    def __init__():
-        # TODO: manage stdout and stderr for all child tasks.
-        # TODO: create some kind of cancel Event, or perhaps a Queue.
-        pass
-    def __str__(self):
-        # TODO: print the TaskGraph as a mermaid diagram representation.
-        pass
-    def start():
-        # TODO: start each start task
-        # TODO: store start time of task graph
-        # TODO: store end time of task graph
-        pass
-    def cancel():
-        # TODO: will cancel all tasks in the graph
-        pass
-    def wait():
-        # TODO: will wait for all tasks in the graph to complete
-        pass
-    def set_stdout():
-        # TODO: will set stdout file for task group
-        pass
-    def set_stderr():
-        # TODO: will set stderr file for task group
-        pass
-    def poll():
-        # TODO: returns true if still executing, false otherwise (I think this is the convention? I could ask AI for suggestion for this API)
-        pass
-    def add_precedence():
-        # TODO: adds an ordering constraint, arguments proceed from left-to-right in
-        # diminishing precedence
-        # TODO: raise error if port_ready and ssh_ready have not been added as tasks.
-        pass
-```
-
-
-TODO graph stuff edge-cases:
-- make sure no cycles? What would this even look like?
-- make sure tasks cannot depend on itself?
-- any other gotchas from literature or otherwise?
-- make sure runtime arguments are valid for the graph, that is, that the dependencies
-and their data requirements are satisfied. For example, if the port check node is
-dependent on the qemu vm node to publish the vm port.
-
-```py
-class Task:
-    def __init__(self, name: 'string'):
-        self.name = name
-        # TODO: create a thread.
-    def target():
-        raise NotImplementedError(
-            'subclasses of class "Task" MUST implement method "target"')
-    def start():
-        self.thread = threading.Thread(target=self.target,args=(),kwargs={})
-
-class SleepTask(Task):
-    def __init__(self, sleep_for):
-        self.sleep_for = sleep_for
-        super().__init__(f"sleep for {sleep_for}s")
-```
-
-My test TaskGroups will be simpler:
-First things first:
-```py
-  task = Task(name: 'sleep for 1s')
-  task.run()
-  task.wait()
-```
-Then introduce TasksGroup:
-```py
-  group = TaskGroup(name: 'sleeps')
-  task = Task(name: 'sleep for 1s')
-  group.add_start_task(task)
-  group.run()
-  group.wait()
-```
-Then introduce dependencies:
-```py
-  group = TaskGroup(name: 'sleeps')
-  task1 = Task(name: 'sleep for 1s')
-  task2 = Task(name: 'sleep for 2s')
-  group.add_start_task(task)
-  task2.depends_on(task1)
-  group.run()
-  group.wait()
-```
-
-The first TaskGroup I will implement is:
-TaskGroup(name: 'run tests once')
-- Task(name: 'create overlay image')
-- Task(name: 'start qemu vm')
-- Task(name: 'wait until port is ready')
-- Task(name: 'wait until ssh is ready')
-- Task(name: 'rsync files once')
-- Task(name: 'run tests once')
-```py
-def main():
-  group = TaskGroup(name: 'run tests once')
-  task1 = Task(name: 'create overlay image')
-  task2 = Task(name: 'start qemu vm')
-  task3 = Task(name: 'wait until port is ready')
-  task4 = Task(name: 'wait until ssh is ready')
-  task5 = Task(name: 'rsync files once')
-  task6 = Task(name: 'run tests once')
-  group.add_start_task(task1)
-  task2.depends_on(task1)
-  task3.depends_on(task2)
-  task4.depends_on(task3)
-  task5.depends_on(task4)
-  task6.depends_on(task5)
-  group.set_stdout(sys.stdout)
-  group.set_stderr(sys.stderr)
-  group.run()
-  group.wait()
-  print(group.stdout)
-  print(group.stderr)
-```
-
-I need to figure out how the data dependencies between tasks will be expressed,
-not just their sequence. In fact, the sequence can be derived by the data
-dependencies. That's actually a better and more modern way to express this.
-Then you let the graph sort algorithm figure out the sequencing order.
-
-So TaskGroup has to evaluate the sequencing order. And enforce the rules around
-data dependencies. So no need for explicit task class I guess? Not quite, the
-Tasks are user-defined, and will be re-used.
-
-I still need a wait to manually specify some sequencing rules for tasks that
-don't have a data dependency but have a sequencing dependency.
-
-```py
-overlay_image = OverlayImageTask(name = 'create overlay image', base_image = 'ubuntu.img')
-vm = QemuTask(
-  name = 'run test vm',
-  image = OverlayImageTask.overlay_image, # data dependency expression
-)
-port_ready = PortReadyTask()
-ssh_ready = SshReadyTask()
-ssh_ready.after(port_ready)
-# OR
-port_ready.before(ssh_ready)
-run_once = TaskGroup(name: 'run tests once')
-run_once.add_task(vm) # order doesn't matter
-run_once.add_task(overlay_image)
-print(run_once) # prints mermaid diagram of the execution order
-run_once.start()
-run_once.wait()
-```
-
-```py
-Ok, so order will be determined by precedence statements.
-port_ready = PortReadyTask()
-ssh_ready = SshReadyTask()
-run_once = TaskGroup(name: 'run tests once')
-run_once.add_task(port_ready)
-run_once.add_task(ssh_ready)
-run_once.add_precedence(port_ready, ssh_ready) 
-```
-Perhaps each data dependency will simply be an annotated kwarg to a Task's
-__init__ function.
-
-```py
-class SleepTask:
-    def __init__(self, sleep_for):
-        super().__init__(f"sleep for {sleep_for}")
-```
-We can inspect function signatures:
-```py
-import inspect
-sig = inspect.signature(Task.__init__)
-for p in sig.parameters:
-    # https://docs.python.org/3/library/inspect.html#inspect.Parameter
-    print(f"Parameter: {p.name}, Kind: {p.kind}, Annotation: {p.annotation}")
-class OverlayImageTask(Task):
-    image: str # publishes "image" as part of TaskGroup context
-class QemuTask(Task):
-    # TaskGroup will read Task.__annotations__ and inject arguments by name
-    def __init__(image):
-        self.image = image
-```
-
-Ok, so data dependencies will be identified using class variables and annotations. Any
-class variable on the Task subclass will be placed into the TaskGroup context. (that
-context should be read-only? for now, yes)
-
-```py
-class OverlayImageTask(Task):
-    image: str
-class QemuVmTask(Task):
-    ssh_port: int
-class PortReadyTask(Task):
-    def __init__(self, ssh_port: DataDependency(QemuVmTask.ssh_port)):
-        pass
-```
-
-Yeah this is weird because I need a binding between an argument to a Task subclass, 
-
-Hmmm maybe you could be explicit about a data dependency if the name is wrong:
-```py
-  TwoTask(port = DataDependency(QemuVmTask, 'ssh_port'))
-```
-
-This could perhaps be a python "protocol" instead
-https://typing.python.org/en/latest/spec/protocol.html
-
-Remember this pattern? Can I have `add_task` both ways?
-
-```py
-run_once = TaskGroup(name = 'run tests once')
-run_once.add_task(OverlayImageTask(base_image = ''))
-run_once.add_task(QemuVmTask, name = 'start test vm', image = 'ubuntu.img')
-run_once.add_task(PortReadyTask, port = DataDependency(QemuVmTask, 'ssh_port'))
-```
-
-I think is best if like
-
-```py
-run_once = TaskGroup(name = 'run tests once')
-overlay_image = OverlayImageTask(base_image = '')
-
-qemu_vm = QemuVmTask(image = TaskGroup.Dependency(overlay_image, 'image'))
-port_ready = PortReadyTask(port = TaskGroup.Dependency(vm, 'ssh_port'))
-ssh_ready = PortReadyTask(port = TaskGroup.Dependency(vm, 'ssh_port'))
-# calculate the correctness of the task dependency graph on every add,
-# but allow adding multiple tasks at once and have dependency graph correctness
-# evaluated with all tasks considered.
-run_once.add_tasks(image_task, qemu_vm, port_ready, ssh_ready)
-run_once.add_precedence(port_ready, ssh_ready)
-```
-
-I don't think there should be automatic injection for Tasks, I think the
-argument passing should be explicit. In contrast, `pytest` is more liberal.
-There's an argument for convenience, but in the case of asynchronous tasks,
-coherence persuades. `pytest` fixture computations are cached, then copied
-on-demand. Task orders are influenced by data dependencies, which left implicit 
-allows task group re-ordering simply by changing an `__init__` parameter's
-name.
-
-Now I need to be able to list all the "self.*" instance variables, to check if
-any of them are a "TaskGroup.Dependency" type. I can do that using `vars()`.
-
-```py
-class TaskGroup:
-  class Dependency:
-    def __init__(self, task, var):
-      self.task = task
-      self.var = var
-  def add_precedence(self, *tasks):
-    self.precedences.append(tasks)
-  def add_tasks(self, *tasks):
-    self.tasks.extend(tasks)
-    for task in tasks:
-      self.identify_data_dependency(task)
-  def identify_data_dependency(self, task):
-    for key, val in vars(task):
-      if isinstance(val, TaskGroup.Dependency):
-        if val.task in tasks:
-          return True
-        else
-          raise Exception('data dependency relies on a task not in the task group')
-```
-
-What's next? I've identified all constraints. Now I need to construct a task
-graph and check the TaskGroup constraints are preserved.
-
-I need to make sure:
-- task data dependencies have the corresponding task in the task group.
-- tasks are ordered by data dependencies
-- tasks are ordered by precedence rules
-
-Likely, there will be multiple candidate graphs that match all constraints. How
-do I narrow these down to a single execution plan? Is there a "minimal" graph
-that maximizes concurrency? Maybe where the average path length for all paths
-through the graph is the shortest?
-
-So, I've developed the API for expressing a TaskGroup's constraints, now, to
-determine the algorithms that use those constraints to develop an execution
-graph.
-
-I could use networkx to implement the graph parts. Makes my life a lot easier.
-https://networkx.org/documentation/stable/reference/introduction.html.
-
-Would be nice to have nice debugging error message when constraints are broken.
-Perhaps a printed out mermaid diagram that renders with colors/text outlining
-the issue.
-
-Example mermaid diagram of a task graph:
-
-```mermaid
-graph TD
-    A --> B
-    D --> B
-```
-
-
-## How threads will share data
-
-Now I have to figure out how threads will share data. I have a feeling the
-queue.Queue class should be fine. The issue is that concurrent threads will
-share data. I suppose I'll have them publish the data to some TaskGroup queue,
-and it uses that event to decide what to run next.
-
-I have my custom thread class, which grants unique ids and stores the task result.
-
-```py
-class Thread(threading.Thread):
-    count = itertools.count(0) # not sure what maximum value is, internet suggests infinite
-    lock = threading.Lock()
-    def __init__(self, task: Task, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        with Task.Thread.lock:
-            self.id = next(Task.Thread.count)
-        self.name = f"TaskThread-{self.id}"
-        self.task_id = task.id
-        self.result = None
-    def run(self):
-        """
-        Override threading.Thread.run to store return value in self.result.
-        (see: inspect.getsource(threading.Thread))
-        """
-        try:
-            if self._target is not None:
-                self.result = self._target(*self._args, **self._kwargs)
-                # TODO: publish to task group queue? or have hooks?
-        finally:
-            del self._target, self._args, self._kwargs
-```
-
-It will have to publish result? But what does it look like from the TaskGroup
-perspective? The TaskGroup has to receive the events from all tasks, so it
-needs to inject the queue.Queue into the task with an on_success hook. But how
-will that be added to the TaskGroup?
-
-This is the `add_tasks` function of the TaskGroup class, it keeps track of
-tasks and their dependencies.
-
-```py
-class TaskGroup:
-    # ...
-    def add_tasks(self, *args):
-        # add tasks to data structures
-        self.tasks.update(args)
-        self.graph.add_nodes_from(args)
-        edges = list()
-        # identifies data dependency between tasks and records the constraint
-        def check_dependency(arg):
-            if isinstance(arg, TaskGroup.Dependency):
-                if arg.task not in self.tasks:
-                    raise TaskGroup.Exception(
-                        'Detected TaskGroup Dependency wrapping unrecognized task. '
-                        'TaskGroup Dependencies must be added to the TaskGroup. '
-                    )
-                edges.append((arg.task, task))
-        # check for data dependencies in the new Task's arguments
-        try:
-            for task in args:
-                for arg in task.args:
-                    check_dependency(arg)
-                for key in task.kwargs:
-                    check_dependency(task.kwargs[key])
-            for edge in edges:
-                self.graph.add_edge(*edge)
-            # ensure the graph remains a Directed Acyclic Graph (DAG)
-            if exc := self.verify_constraints():
-                raise exc
-        # perform recovery, rolling back any data structure changes
-        except TaskGroup.Exception as e:
-            for edge in edges:
-                self.graph.remove_edge(*edge)
-            self.tasks.difference_update(args)
-            self.graph.remove_nodes_from(args)
-            raise e
-```
-
-If the tasks are successfully added, those tasks need an on_success handler
-registered with them. So Tasks need a hook system.
-
-Hooks are:
-- on_success and on_exception (later)
-- a hook can be set many times, by many TaskGroups, and the Task manages
-calling the hooks
-- and I guess the thread would have to communicate with the main thread through a queue.
-
-```py
-class Task:
-    class Thread(threading.Thread):
-        count = itertools.count(0) # not sure what maximum value is, internet suggests infinite
-        lock = threading.Lock()
-        def __init__(self, task: Task, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            with Task.Thread.lock:
-                self.id = next(Task.Thread.count)
-            self.name = f"TaskThread-{self.id}"
-            self.task_id = task.id
-            self.result = None
-        def run(self):
-            """
-            Override threading.Thread.run to store return value in self.result.
-            (see: inspect.getsource(threading.Thread))
-            """
-            try:
-                if self._target is not None:
-                    self.result = self._target(*self._args, **self._kwargs)
-            finally:
-                del self._target, self._args, self._kwargs
-
-    def __init__(self, target = None, name = None, args = list(), kwargs = dict()):
-        self.id = id(self)
-        self.target = target if target else lambda: None
-        self.args = args
-        self.kwargs = kwargs
-        if name:
-            self.name = name
-        elif self.target.__name__ != '<lambda>':
-            self.name = self.target.__name__
-        else:
-            self.name = f"lambda:{self.id}"
-        self.hooks = {'on_success': set()}
-    def __str__(self):
-        return f"Task[{self.name}]"
-    def start(self):
-        self.thread = Task.Thread(task=self, target=self.target,args=(),kwargs={})
-        print(f"starting [Task: {self.id}] [Thread: {self.thread.id}]")
-        self.thread.start()
-    def wait(self, timeout = None):
-        self.thread.join(timeout)
-        for hook in self.hooks:
-            match hook:
-                case ('on_success', fns):
-                    for fn in fns:
-                        fn(self.thread.result)
-    def set_args(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-    def set_hook(self, hook, fn):
-        self.hooks[hook].update(fn)
-    def del_hook(self, hook, fn):
-        self.hooks[hook].difference_update(fn)
-```
-
-So a TaskGroup's responsibility is to wait() the Task threads in the right
-order that it can resolve data dependencies. I wonder if there is another way
-to do this. Instead on wait on each thread, can it wait on events from the
-queue? Then use those events to trigger other task runs? Then .wait() order
-doesn't matter. So when a thread finishes, it will publish the event.
-
-I need to think about what the new approach, where we don't wait() threads, fits.
-but threads need to publish a completion event. Hmmm.
-
-## Outline of TaskGroup+Task explanation
+## Real-world Application: Running Tasks Concurrently
 
 I had been motivated to explore concurrency in Python when trying to integrate
 an async-based library into a thread-based system I had been building. The
@@ -919,4 +450,379 @@ class Task:
             self.name = f"TaskThread-{self.id}"
             self.task_id = task.id
     # ...
+```
+
+We have a basic Task at the moment, but at this moment I wanted to define what
+the API for defining a TaskGroup would look like. The API would inform the
+implementation, and it wasn't clear at first what the ideal declarative syntax
+was from my perspective. I evaluated several options, both top-down
+(TaskGroup-oriented) and bottom-up (Task-oriented) approaches, and settled on a
+mix of the two, moving the responsibility of declaring an execution constraint
+to the salient object.
+
+At first, dependencies were defined by tasks, and a TaskGroup would be
+concerned with orchestrating Task execution based on a starting task.
+
+```py
+group = TaskGroup()
+task1 = Task()
+task2 = Task()
+group.add_start_task(task1)
+task2.depends_on(task1)
+group.run()
+group.wait()
+```
+
+There was a suggestion to allow tasks to specify "before" or "after"
+dependencies, and the TaskGroup would infer the order based on a set of tasks.
+
+```py
+group = TaskGroup()
+task1 = Task()
+task2 = Task()
+task2.after(task1)
+# OR
+task1.before(task2)
+group.add_task(task1)
+group.add_task(task2)
+group.run()
+group.wait()
+```
+
+The issue here is that ordering is not a concern of the Task, but of the
+TaskGroup, so I settled on a precedence declaration to set the order, but not
+necessarily the precise sequence.
+
+```py
+group = TaskGroup()
+task1 = Task()
+task2 = Task()
+group.add_tasks(task1, task2)
+group.add_precedence(task1, task2) # declaration of ordering
+group.run()
+group.wait()
+```
+
+With simple ordering specified, I wanted to declare data dependencies between
+Tasks in a natural manner. Python is delightfully introspectible, and I hoped
+to piggy-back on the same feature that powers type hints, that is,
+"annotations". Perhaps I could annotate the arguments to a Task and the
+TaskGroup could infer data dependencies from those annotations.
+
+We can inspect Python function signatures in the following manner, and could
+declare the "exported" data values, i.e. available interdependencies, on the
+subclass of a Task
+
+```py
+class OverlayImageTask(Task):
+  # publish "image" as a possible data dependency
+  image: str
+# QemuTask consumes the image parameter from OverlayImageTask
+class QemuTask(Task):
+  def __init__(image):
+    self.image = image
+# TaskGroup would inspect function signatures in the following manner.
+import inspect
+for p in inspect.signature(QemuTask.__init__).parameters:
+  print(p.name, p.kind, p.annotation)
+```
+
+This gets messy though, as there is no explicit connection between the
+published value and consumed parameter except for the name. Annotations are
+nice, and I may return to them in the future, but instead I decided to couple
+Task and TaskGroup through a "TaskGroup.Dependency" class, which will act as
+the explicit data dependency between Tasks.
+
+```py
+run_once = TaskGroup(name = 'run tests once')
+overlay_image = OverlayImageTask(base_image = 'foo.img')
+qemu_vm = QemuVmTask(image = TaskGroup.Dependency(overlay_image, 'image'))
+ssh_ready = PortReadyTask(port = TaskGroup.Dependency(qemu_vm, 'ssh_port'))
+run_once.add_tasks(overlay_image, qemu_vm, ssh_ready)
+```
+
+Now we have methods for defining the two execution constraints, order and data
+dependency.
+
+Let's look at the implementation of the constraints. I'm using networkx to
+manage our TaskGraph as a directed acyclic graph (DAG). A DAG let's me be sure
+there are no circular dependencies between Task operations which would
+interfere with sequencing the Task operations in a natural order, without
+putting a more complicated default value and layered result system on top.
+
+Ordering constraints are specified using the "add_precedence" method, and data
+dependencies are specified with the "add_tasks" method. Each method will roll
+back any data structure updates if the graph constraints are not preserved.
+
+```py
+class TaskGroup:
+    def __init__(self, name = None, *args):
+        self.tasks = set(args)
+        self.graph = networkx.DiGraph()
+    def add_precedence(self, *tasks):
+        if len(tasks) < 2:
+            raise TaskGroup.Exception(
+                'TaskGroup.add_precedence called with fewer than two arguments. '
+                'Precedence constraints must be expressed in terms of 2 or more tasks')
+        # self.add_tasks(*tasks) # TODO: tasks can be added through add_precedence
+        for i in range(len(tasks) - 1):
+            self.graph.add_edge(tasks[i], tasks[i + 1])
+        if exc := self.verify_constraints():
+            for i in range(len(tasks) - 1):
+                self.graph.remove_edge(tasks[i], tasks[i + 1])
+            raise exc
+    def add_tasks(self, *args):
+        self.tasks.update(args)
+        self.graph.add_nodes_from(args)
+        edges = list()
+        def check_dependency(arg):
+            if isinstance(arg, TaskGroup.Dependency):
+                if arg.task not in self.tasks:
+                    raise TaskGroup.Exception(
+                        'Detected TaskGroup Dependency wrapping unrecognized task. '
+                        'TaskGroup Dependencies must be added to the TaskGroup. '
+                    )
+                edges.append((arg.task, task))
+        try:
+            for task in args:
+                for arg in task.args:
+                    check_dependency(arg)
+                for key in task.kwargs:
+                    check_dependency(task.kwargs[key])
+            for edge in edges:
+                self.graph.add_edge(*edge)
+            if exc := self.verify_constraints():
+                raise exc
+        except TaskGroup.Exception as e:
+            for edge in edges:
+                self.graph.remove_edge(*edge)
+            self.tasks.difference_update(args)
+            self.graph.remove_nodes_from(args)
+            raise e
+    def verify_constraints(self) -> None | TaskGroup.Exception:
+        if not networkx.is_directed_acyclic_graph(self.graph):
+            return TaskGroup.Exception(
+                'Cycle detected. '
+                'Ordering constraints must not introduce cycles. '
+                'A TaskGroup must be a directed acyclic graph.')
+```
+
+Constraints are expressed as edges in the graph. Resolving ordering constraints
+is easy, I just need to make sure tasks are executed in order. Resolving a data
+dependency is trickier, I need some way to pass data between Tasks and threads.
+
+I have a custom Thread class, which gives me control over how Task threads are
+executed and their result handled. I can use that to implement success and
+exception hooks that publish a Task's result to an event queue.
+
+```py
+class Task:
+    # ...
+    class Thread(threading.Thread):
+        count = itertools.count(0)
+        lock = threading.Lock()
+        def __init__(self, task: Task, on_success, on_exception, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            with Task.Thread.lock:
+                self.id = next(Task.Thread.count)
+            self.name = f"TaskThread-{self.id}"
+            self.task_id = task.id
+            self.result = None
+            self.on_success = on_success
+            self.on_exception = on_exception
+        def run(self):
+            """
+            Override threading.Thread.run to store return value in self.result.
+            (see: inspect.getsource(threading.Thread))
+            """
+            try:
+                if self._target is not None:
+                    self.result = self._target(*self._args, **self._kwargs)
+                    self.on_success((self.task_id, self.result))
+            except Exception as e:
+                self.on_exception((self.task_id, e))
+            finally:
+                del self._target, self._args, self._kwargs
+
+    def __init__(self, target = None, name = None, args = None, kwargs = None):
+        # ...
+        self.hooks = {'on_success': set(), 'on_exception': set()}
+    def start(self, *args, **kwargs):
+        self.thread = Task.Thread(
+            task=self,
+            target=self.target,
+            on_success = lambda *a, **kw: self.trigger_hook('on_success', *a, **kw),
+            on_exception = lambda *a, **kw: self.trigger_hook('on_exception', *a, **kw),
+            args=args,
+            kwargs=kwargs,
+        )
+        self.thread.start()
+    def add_hook(self, hook, fn):
+        if hook not in self.hooks:
+            raise Task.Exception(f'Request to add unknown hook "{hook}" ')
+        self.hooks[hook].add(fn)
+    def remove_hook(self, hook, fn):
+        if hook not in self.hooks:
+            raise Task.Exception(f'Request to remove unknown hook "{hook}" ')
+        self.hooks[hook].discard(fn)
+    def trigger_hook(self, hook, *args, **kwargs):
+        for fn in self.hooks[hook]:
+            fn(*args, **kwargs)
+```
+
+Now that we have a constraints specified and a way to share data between tasks,
+let's take a look at task execution.
+
+My first implementation was serial in nature, each task would wait for the previous to complete, regardless of constraint.
+
+```py
+class TaskGroup:
+    # ...
+    class ControlLoop:
+        # ...
+        def loop_serial(self):
+            """
+            This control loop is serial. It executes tasks one by one, and must wait for the
+            current task to finish before starting the next.
+            """
+            for task in networkx.topological_sort(self.graph):
+                if self.flag_cancel.is_set():
+                    break
+                self.task_register_hooks(task)
+                args, kwargs = self.task_get_args(task)
+                task.start(*args, **kwargs)
+                task_id, result = self.eventq.get()
+                with self.lock_result:
+                    if isinstance(result, Exception):
+                        self.errors.append(result)
+                    else:
+                        self.results[task_id] = result
+            for task in self.tasks:
+                task.wait()
+                self.task_unregister_hooks(task)
+    def start(self):
+        """
+        This function starts all nodes in the graph.
+
+        Not all nodes are guaranteed to have finished executing when .start() returns.
+        Must call .wait() for that. Because if the last nodes were started (they have no
+        successors) this function returns without waiting.
+        """
+        if len(self.graph.nodes) == 0:
+            raise TaskGroup.Exception(
+                'Called start() on an empty TaskGroup. '
+                'You cannot start an empty TaskGroup.')
+
+        # want to isolate state related to a single TaskGroup.start(). Allows tasks in
+        # group to be modified while a TaskGroup is running concurrently.
+        self.control_loop = TaskGroup.ControlLoop(
+            tasks = self.tasks.copy(),
+            graph = self.graph.copy(),
+        )
+        self.control_loop.start()
+
+```
+
+Note the "topological_sort" method on the DAG is what enforces execution order.
+
+Note the ControlLoop class. It's set up to isolate data for a single TaskGroup
+run. The control loop also runs in its own thread, so it doesn't block the main
+thread from executing while it sequences and handles the Task threads. The
+ControlLoop thread will stop when all the Task threads in the group have
+stopped, i.e. the TaskGroup run has completed.
+
+The test for data dependencies clearly shows the API, let's take a look
+
+```py
+def test_task_group_data_dependencies_share_data_args():
+    group = TaskGroup()
+    task1 = Task(name = '1', target=lambda: 'foo')
+    def assert_foo(data):
+        assert data == 'foo'
+    task2 = Task(name = '2', target=assert_foo)
+    task2.set_args(TaskGroup.Dependency(task1))
+    group.add_tasks(task2, task1)
+    with assert_tasks(nthread = 2, order = [task1, task2]):
+        group.start()
+        group.wait()
+```
+
+The issue with serial execution is that nodes with no dependencies will not be
+started concurrently, which theoretically slows execution. What would a
+concurrent model of execution loop like?
+
+```py
+class TaskGroup:
+    # ...
+    class ControlLoop:
+        # ...
+        def loop_concurrent(self):
+            """
+            This control loop is concurrent. It starts independent tasks immediately
+            without waiting and then starts dependent tasks when their predecessor has
+            finished.
+            """
+            waiting = next(networkx.topological_generations(self.graph))
+            while not self.flag_cancel.is_set():
+                # make sure to copy the set, otherwise items are skipped.
+                for task in waiting.copy():
+                    if self.task_is_ready(task):
+                        self.task_register_hooks(task)
+                        args, kwargs = self.task_get_args(task)
+                        task.start(*args, **kwargs)
+                        waiting.remove(task)
+                        waiting += self.graph.successors(task)
+                if len(waiting) > 0:
+                    task_id, result = self.eventq.get() # blocks and defers CPU time
+                    with self.lock_result:
+                        if isinstance(result, Exception):
+                            self.errors.append(result)
+                        else:
+                            self.results[task_id] = result
+                    self.eventq.task_done()
+                else:
+                    # exit early, no more data dependencies to wait and resolve
+                    break
+            for task in self.tasks:
+                task.wait()
+                self.task_unregister_hooks(task)
+```
+
+It uses the concept of a "waiting" Task set to manage in-flight and pending
+tasks. Note the "topological_generations" method is used to enforce ordering.
+It differs from the topological sort in that it returns a set of nodes in the
+same generation, or the nodes with the same depth in the graph. Nodes in the
+same generation don't have dependencies with each other, and can be executed
+concurrently when their parent nodes (if any) have finished executing. When a
+task is started, its successor nodes get added to the waiting set, and the
+control loop will periodically check if the parent node has finished executing
+before starting them. The control loop defers CPU time until a Task has
+finished and published a result event to the event queue. This avoids
+inefficient busy polling.
+
+The test for concurrent execution is straightforward:
+
+```py
+def test_task_group_start_concurrently():
+    """
+    To test threads are started concurrently, we start two sleeping threads and check
+    the started thread count before the sleeps elapse. If the tasks are executed
+    concurrently, thread count should be greater than one. If the tasks are executed
+    serially, thread count should only be one, the second task isn't started until the
+    first task has finished, which will be after our test thread checks the thread
+    count.
+    """
+    group = TaskGroup()
+    task1 = Task(name = '1', target = lambda: time.sleep(.2))
+    task2 = Task(name = '2', target = lambda: time.sleep(.2))
+    group.add_tasks(task1, task2)
+    with assert_tasks(nthread = 2) as tracker:
+        group.start()
+        # give time for threads to start
+        time.sleep(.1)
+        # at this point threads are started but sleeping.
+        assert tracker.nthread == 2
+        # assertion is not true when serial, not enough time elapsed for a task to
+        # finish, implying the next one was not started.
+        group.wait()
 ```
