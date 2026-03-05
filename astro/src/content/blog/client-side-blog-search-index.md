@@ -2,7 +2,7 @@
 title: 'Creating a client-side search index'
 description: 'Creating a '
 pubDate: 2025-12-1
-draft: false
+draft: true
 ---
 
 There should be some way for me to perform client-side
